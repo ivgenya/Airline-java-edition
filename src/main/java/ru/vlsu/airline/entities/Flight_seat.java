@@ -1,5 +1,7 @@
 package ru.vlsu.airline.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 
 @Entity
@@ -11,10 +13,12 @@ public class Flight_seat {
 
     @ManyToOne
     @JoinColumn(name = "plane_seat_id", nullable = false)
+    @JsonIgnore
     private Plane_seat planeSeat;
 
     @ManyToOne
     @JoinColumn(name = "flight_id", nullable = false)
+    @JsonIgnore
     private Flight flight;
 
     @Column(nullable = false)

@@ -1,5 +1,7 @@
 package ru.vlsu.airline.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -32,6 +34,7 @@ public class Passenger {
     private String email;
 
     @OneToMany(mappedBy = "passenger", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Ticket> tickets;
 
 

@@ -1,5 +1,7 @@
 package ru.vlsu.airline.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
@@ -16,18 +18,22 @@ public class Ticket {
 
     @ManyToOne
     @JoinColumn(name = "passenger_id", nullable = false)
+    @JsonIgnore
     private Passenger passenger;
 
     @ManyToOne
     @JoinColumn(name = "flight_id", nullable = false)
+    @JsonIgnore
     private Flight flight;
 
     @ManyToOne
     @JoinColumn(name = "booking_id")
+    @JsonIgnore
     private Booking booking;
 
     @ManyToOne
     @JoinColumn(name = "seat_id", nullable = false)
+    @JsonIgnore
     private Flight_seat seat;
 
     @Column(name = "date_of_purchase", nullable = false)
@@ -41,6 +47,7 @@ public class Ticket {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
 

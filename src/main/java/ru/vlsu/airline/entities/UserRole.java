@@ -1,5 +1,7 @@
 package ru.vlsu.airline.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 
 @Entity
@@ -12,10 +14,12 @@ public class UserRole {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
+    @JsonIgnore
     private Role role;
 
     public int getId() {

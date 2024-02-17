@@ -1,5 +1,7 @@
 package ru.vlsu.airline.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.util.List;
 
@@ -15,6 +17,7 @@ public class Role {
     private String roleName;
 
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<UserRole> userRoles;
 
     public Long getId() {
