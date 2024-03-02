@@ -11,7 +11,7 @@ import ru.vlsu.airline.entities.Ticket;
 import java.util.List;
 
 public interface ITicketService {
-    String getTicket();
+    void checkTicketStatus();
     List<Ticket> getAllTickets();
     Ticket getTicketById(int ticketId);
     List<Ticket> getTicketsByBookingId(int bookingId);

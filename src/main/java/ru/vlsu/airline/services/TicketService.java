@@ -1,21 +1,47 @@
 package ru.vlsu.airline.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.vlsu.airline.dto.BoardingPassModel;
 import ru.vlsu.airline.dto.PassengerModel;
 import ru.vlsu.airline.dto.PaymentModel;
-import ru.vlsu.airline.entities.Booking;
-import ru.vlsu.airline.entities.Flight_seat;
-import ru.vlsu.airline.entities.Passenger;
-import ru.vlsu.airline.entities.Ticket;
+import ru.vlsu.airline.entities.*;
+import ru.vlsu.airline.repositories.*;
+import ru.vlsu.airline.statemachine.model.TicketEvent;
+import ru.vlsu.airline.statemachine.model.TicketState;
 
+
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 
 @Service
 public class TicketService implements ITicketService{
-    public String getTicket(){
-        return "this is ticket";
-    }
+
+    private static final Logger logger = LoggerFactory.getLogger(TicketService.class);
+
+    @Autowired
+    private StateMachine<TicketState, TicketEvent> stateMachine;
+    @Autowired
+    private JpaPersist jpaPersist;
+
+
+    @Autowired
+    private TicketRepository ticketRepository;
+    @Autowired
+    private PassengerRepository passengerRepository;
+    @Autowired
+    private FlightRepository flightRepository;
+    @Autowired
+    private FlightSeatRepository seatRepository;
 
     @Override
     public List<Ticket> getAllTickets() {
@@ -54,9 +80,58 @@ public class TicketService implements ITicketService{
 
     @Override
     public Ticket buyTicket(PassengerModel passenger, int flightId, int seatId) {
-        Ticket ticket = new Ticket("ABC123", "Confirmed", "Checked");
-        return ticket;
+        Passenger newPassenger = passengerRepository.save(new Passenger(passenger));
+        Optional<Flight> flight = flightRepository.findById(flightId);
+        if (flight.isPresent()) {
+            Flight existFlight = flight.get();
+            Optional<Flight_seat> seat = seatRepository.findById(seatId);
+            if(seat.isPresent() && seat.get().getStatus().equals("available")){
+                Flight_seat existSeat = seat.get();
+                Ticket ticket = new Ticket();
+                ticket.setCode(UUID.randomUUID().toString());
+                ticket.setStatus("UNPAID");
+                ticket.setBaggageType("economy");
+                ticket.setDateOfPurchase(LocalDateTime.now());
+                ticket.setPassengerId(newPassenger.getId());
+                ticket.setFlightId(existFlight.getId());
+                ticket.setSeatId(existSeat.getId());
+                ticket.setBookingId(null);
+                existSeat.setStatus("reserved");
+                seatRepository.save(existSeat);
+                //Ticket saved_ticket = ticketRepository.save(ticket);
+                //Integer contextObj = saved_ticket.getId();
+                //StateMachineContext<TicketState, TicketEvent> context = new DefaultStateMachineContext<>(TicketState.UNPAID, null, null, null, null, "ticketStateMachine");
+                //jpaPersist.write(context, contextObj);
+                //return saved_ticket;
+                return ticketRepository.save(ticket);
+            }
+        }
+        return null;
     }
+
+    @Scheduled(fixedRate = 60000)
+    @Transactional
+    public void checkTicketStatus() {
+        LocalDateTime currentTime = LocalDateTime.now();
+        List<Ticket> unpaidTickets = ticketRepository.findByStatus(TicketState.UNPAID.toString());
+        logger.info("cheking ticket's status");
+        for (Ticket ticket : unpaidTickets) {
+            Duration timeElapsed = Duration.between(ticket.getDateOfPurchase(), currentTime);
+            if (timeElapsed.toMinutes() >= 10) {
+                ticket.setStatus("UNABLE_TO_PAY");
+                ticketRepository.save(ticket);
+                //stateMachine.start();
+                //stateMachine.getExtendedState().getVariables().put("ticketId", ticket.getId());
+                //stateMachine.sendEvent(TicketEvent.UNABLE);
+                //Integer contextObj = ticket.getId();
+                //StateMachineContext<TicketState, TicketEvent> context = new DefaultStateMachineContext<>(stateMachine.getState().getId(), null, null, null, null, "ticketStateMachine");
+                //jpaPersist.write(context, contextObj);
+            }
+        }
+    }
+
+
+
 
     @Override
     public boolean makePayment(int ticketId, PaymentModel paymentInfo) {
@@ -71,7 +146,7 @@ public class TicketService implements ITicketService{
     @Override
     public int cancellBooking(int bookingId) {
         // TODO: переделать с репозиторием
-        /** booking.cancel();
+        /* booking.cancel();
         ticketService.updateBooking(booking);
 
         List<Ticket> tickets = ticketService.getTicketsByBookingId(bookingId);
@@ -83,7 +158,7 @@ public class TicketService implements ITicketService{
             seat.setStatus("available");
             ticketService.updateSeat(seat);
         }
-         **/
+         */
         return 0;
     }
 

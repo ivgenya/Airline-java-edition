@@ -30,14 +30,11 @@ public class TicketController {
     public ResponseEntity<?> buyTicket(@Valid @RequestBody PassengerModel passengerModel,
                                             @RequestParam int flightId,
                                             @RequestParam int seatId) {
-        Flight_seat seat = ticketService.getSeatById(seatId);
-        if(seat == null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Место не найдено");
+        Ticket ticket = ticketService.buyTicket(passengerModel, flightId, seatId);
+        if(ticket == null){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Произошла ошибка при покупке");
         }
-        if(seat.getStatus().equals("reserved")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Место занято");
-        }
-        return ResponseEntity.ok(ticketService.buyTicket(passengerModel, flightId, seatId));
+        return ResponseEntity.ok(ticket);
     }
 
     @PostMapping(value = "/book/{ticketId}", produces = "application/json")
