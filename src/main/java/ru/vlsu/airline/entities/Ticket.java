@@ -1,6 +1,7 @@
 package ru.vlsu.airline.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import ru.vlsu.airline.statemachine.model.TicketState;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -16,25 +17,22 @@ public class Ticket {
     @Column(nullable = false)
     private String code;
 
-    @ManyToOne
-    @JoinColumn(name = "passenger_id", nullable = false)
-    @JsonIgnore
-    private Passenger passenger;
+    @Column(name = "flight_id", nullable = false)
+    private int flightId;
 
-    @ManyToOne
-    @JoinColumn(name = "flight_id", nullable = false)
-    @JsonIgnore
-    private Flight flight;
+    @Column(name = "seat_id", nullable = false)
+    private int seatId;
 
-    @ManyToOne
-    @JoinColumn(name = "booking_id")
-    @JsonIgnore
-    private Booking booking;
+    @Column(name = "passenger_id", nullable = false)
+    private int passengerId;
 
-    @ManyToOne
-    @JoinColumn(name = "seat_id", nullable = false)
+    @Column(name = "booking_id")
     @JsonIgnore
-    private Flight_seat seat;
+    private Integer bookingId;
+
+    @Column(name = "user_id")
+    @JsonIgnore
+    private Integer userId;
 
     @Column(name = "date_of_purchase", nullable = false)
     private LocalDateTime dateOfPurchase;
@@ -46,9 +44,39 @@ public class Ticket {
     private String baggageType;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "passenger_id", insertable = false, updatable = false)
+    @JsonIgnore
+    private Passenger passenger;
+
+    @ManyToOne
+    @JoinColumn(name = "flight_id", insertable = false, updatable = false)
+    @JsonIgnore
+    private Flight flight;
+
+    @ManyToOne
+    @JoinColumn(name = "booking_id", insertable = false, updatable = false)
+    @JsonIgnore
+    private Booking booking;
+
+    @ManyToOne
+    @JoinColumn(name = "seat_id", insertable = false, updatable = false)
+    @JsonIgnore
+    private Flight_seat seat;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
     @JsonIgnore
     private User user;
+
+    @JsonIgnore
+    private TicketState state;
+
+    public TicketState getState() {
+        return state;
+    }
+    public void setState(TicketState state) {
+        this.state = state;
+    }
 
 
 
@@ -147,5 +175,45 @@ public class Ticket {
 
     public void setBaggageType(String baggageType) {
         this.baggageType = baggageType;
+    }
+
+    public int getFlightId() {
+        return flightId;
+    }
+
+    public void setFlightId(int flightId) {
+        this.flightId = flightId;
+    }
+
+    public int getSeatId() {
+        return seatId;
+    }
+
+    public void setSeatId(int seatId) {
+        this.seatId = seatId;
+    }
+
+    public int getPassengerId() {
+        return passengerId;
+    }
+
+    public void setPassengerId(int passengerId) {
+        this.passengerId = passengerId;
+    }
+
+    public int getBookingId() {
+        return bookingId;
+    }
+
+    public void setBookingId(Integer bookingId) {
+        this.bookingId = bookingId;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
     }
 }

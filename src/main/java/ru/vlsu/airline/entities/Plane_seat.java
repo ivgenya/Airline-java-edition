@@ -12,16 +12,19 @@ public class Plane_seat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne
-    @JoinColumn(name = "plane_id", nullable = false)
-    @JsonIgnore
-    private Plane plane;
 
-    @Column(nullable = false)
+    @Column(name = "plane_id", nullable = false)
+    private int planeId;
+    @Column(name="class", nullable = false)
     private String seatClass;
 
-    @Column(nullable = false)
+    @Column(name="number", nullable = false)
     private String number;
+
+    @ManyToOne
+    @JoinColumn(name = "plane_id", insertable = false, updatable = false)
+    @JsonIgnore
+    private Plane plane;
 
     public Plane_seat() {
     }

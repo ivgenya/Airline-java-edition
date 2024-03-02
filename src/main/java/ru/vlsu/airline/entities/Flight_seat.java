@@ -11,21 +11,29 @@ public class Flight_seat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Column(name = "price", nullable = false)
+    private int price;
+
+    @Column(name = "status", nullable = false)
+    private String status;
+
+    @Column(name = "plane_seat_id", nullable = false)
+    private String planeSeatId;
+
+    @Column(name = "flight_id", nullable = false)
+    private String flightId;
+
     @ManyToOne
-    @JoinColumn(name = "plane_seat_id", nullable = false)
+    @JoinColumn(name = "plane_seat_id", insertable = false, updatable = false)
     @JsonIgnore
     private Plane_seat planeSeat;
 
     @ManyToOne
-    @JoinColumn(name = "flight_id", nullable = false)
+    @JoinColumn(name = "flight_id", insertable = false, updatable = false)
     @JsonIgnore
     private Flight flight;
 
-    @Column(nullable = false)
-    private int price;
 
-    @Column(nullable = false)
-    private String status;
 
     public Flight_seat() {
     }

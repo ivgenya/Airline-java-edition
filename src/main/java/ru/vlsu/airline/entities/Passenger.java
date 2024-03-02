@@ -1,6 +1,7 @@
 package ru.vlsu.airline.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import ru.vlsu.airline.dto.PassengerModel;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -15,27 +16,37 @@ public class Passenger {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(nullable = false)
+    @Column(name = "surname", nullable = false)
     private String surname;
 
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(name = "document_number")
     private String documentNumber;
 
-    @Column(nullable = false)
+    @Column(name = "date_of_birth",nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column(nullable = false)
+    @Column(name = "gender", nullable = false)
     private String gender;
 
-    @Column(nullable = false)
+    @Column(name = "email", nullable = false)
     private String email;
 
     @OneToMany(mappedBy = "passenger", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Ticket> tickets;
+    public Passenger(){}
+
+    public Passenger(PassengerModel passengerModel) {
+        this.surname = passengerModel.getSurname();
+        this.name = passengerModel.getName();
+        this.documentNumber = passengerModel.getDocumentNumber();
+        this.dateOfBirth = passengerModel.getDateOfBirth();
+        this.gender = passengerModel.getGender();
+        this.email = passengerModel.getEmail();
+    }
 
 
     public int getId() {
