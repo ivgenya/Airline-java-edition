@@ -84,7 +84,7 @@
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
       <artifactId>jjwt-gson</artifactId>
-      <version>0.11.5</version>>
+      <version>0.11.5</version>
     </dependency>
     <dependency>
       <groupId>io.jsonwebtoken</groupId>
@@ -148,7 +148,7 @@
             <server>TomcatServer</server>
             <path>/airline</path>
             <username>admin</username>
-            <password>password</password>
+            <password>root</password>
           </configuration>
         </plugin>
       </plugins>
