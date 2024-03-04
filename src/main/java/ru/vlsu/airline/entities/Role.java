@@ -16,9 +16,8 @@ public class Role {
     @Column(nullable = false)
     private String roleName;
 
-    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<UserRole> userRoles;
+    @OneToMany(mappedBy = "role")
+    private List<User> users;
 
     public Long getId() {
         return id;
@@ -34,13 +33,5 @@ public class Role {
 
     public void setRoleName(String roleName) {
         this.roleName = roleName;
-    }
-
-    public List<UserRole> getUserRoles() {
-        return userRoles;
-    }
-
-    public void setUserRoles(List<UserRole> userRoles) {
-        this.userRoles = userRoles;
     }
 }
