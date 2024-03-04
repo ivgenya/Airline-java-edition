@@ -7,7 +7,7 @@ public class AirlineAppInitializer extends AbstractAnnotationConfigDispatcherSer
 
     @Override
     protected Class<?>[] getRootConfigClasses() {
-        return null;
+        return new Class[] { WebSecurityConfig.class };
     }
 
     @Override
