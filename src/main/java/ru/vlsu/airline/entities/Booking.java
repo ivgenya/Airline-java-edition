@@ -15,13 +15,13 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(nullable = false)
+    @Column(name = "code", nullable = false)
     private String code;
 
-    @Column(nullable = false)
+    @Column(name = "booking_date", nullable = false)
     private LocalDateTime bookingDate;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     private String status;
 
 

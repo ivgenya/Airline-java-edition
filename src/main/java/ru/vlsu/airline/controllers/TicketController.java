@@ -14,10 +14,6 @@ import ru.vlsu.airline.entities.Ticket;
 import ru.vlsu.airline.services.ITicketService;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -39,11 +35,11 @@ public class TicketController {
 
     @PostMapping(value = "/book/{ticketId}", produces = "application/json")
     public ResponseEntity<?> bookTicket(@PathVariable int ticketId) {
-        int booking = ticketService.reserveTicket(ticketId);
-        if (booking == -1) {
+        Ticket ticket = ticketService.reserveTicket(ticketId);
+        if (ticket == null) {
             return new ResponseEntity<>("Билет не найден", HttpStatus.NOT_FOUND);
         }
-        return ResponseEntity.ok(booking);
+        return ResponseEntity.ok(ticket);
     }
 
     @PostMapping(value = "/pay/{ticketId}", produces = "application/json")
@@ -71,7 +67,7 @@ public class TicketController {
         }
 
     }
-
+/*
     @PostMapping(value = "/register", produces = "application/json")
     public ResponseEntity<?> registerForFlight(@RequestParam String ticketCode) {
         Ticket ticket = ticketService.getTicketByCode(ticketCode);
@@ -94,19 +90,16 @@ public class TicketController {
         }
 
         if (ticket.getStatus().equals("paid")) {
-            // TODO: состояния
-            ticketService.updateTicket(ticket);
-            byte[] pdfBytes = ticketService.generateBoardingPass(boardingPass);
-            return ResponseEntity.ok().body(pdfBytes);
+             TODO: состояния
+            //ticketService.updateTicket(ticket);
+            //byte[] pdfBytes = ticketService.generateBoardingPass(boardingPass);
+            //return ResponseEntity.ok().body(pdfBytes);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Невозможно зарегистрировать билет");
     }
 
-    /**
-     * Метод отмены бронирования
-     * @param bookingId
-     * @return
-     */
+ */
+
     @PostMapping(value = "/cancel/{bookingId}", produces = "application/json")
     public ResponseEntity<String> cancelBooking(@PathVariable int bookingId) {
         Booking booking = ticketService.getBookingById(bookingId);
@@ -146,6 +139,7 @@ public class TicketController {
         return ResponseEntity.ok(ticketDetails);
     }
 
+    /*
     @GetMapping(value = "/details-by-booking/{code}", produces = "application/json")
     public ResponseEntity<?> getTicketDetailsByBooking(@PathVariable String code) {
         Booking booking = ticketService.getBookingByCode(code);
@@ -160,4 +154,6 @@ public class TicketController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Бронирование с таким кодом не существует");
     }
+
+     */
 }

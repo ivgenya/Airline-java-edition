@@ -27,11 +27,11 @@ public class Ticket {
     private int passengerId;
 
     @Column(name = "booking_id")
-    @JsonIgnore
+    //@JsonIgnore
     private Integer bookingId;
 
     @Column(name = "user_id")
-    @JsonIgnore
+    //@JsonIgnore
     private Integer userId;
 
     @Column(name = "date_of_purchase", nullable = false)

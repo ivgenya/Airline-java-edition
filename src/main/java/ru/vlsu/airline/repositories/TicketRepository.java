@@ -8,10 +8,13 @@ import ru.vlsu.airline.entities.Ticket;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Integer> {
     List<Ticket> findByStatus(String status);
+    List<Ticket> findByBookingId(int bookingId);
+    Optional<Ticket> findByCode(String code);
 
 }

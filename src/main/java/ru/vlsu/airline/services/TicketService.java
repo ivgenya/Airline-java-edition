@@ -29,11 +29,7 @@ public class TicketService implements ITicketService{
     private static final Logger logger = LoggerFactory.getLogger(TicketService.class);
 
     @Autowired
-    private StateMachine<TicketState, TicketEvent> stateMachine;
-    @Autowired
-    private JpaPersist jpaPersist;
-
-
+    private BookingRepository bookingRepository;
     @Autowired
     private TicketRepository ticketRepository;
     @Autowired
@@ -43,40 +39,7 @@ public class TicketService implements ITicketService{
     @Autowired
     private FlightSeatRepository seatRepository;
 
-    @Override
-    public List<Ticket> getAllTickets() {
-        return null;
-    }
 
-    @Override
-    public Ticket getTicketById(int ticketId) {
-        return null;
-    }
-
-    @Override
-    public List<Ticket> getTicketsByBookingId(int bookingId) {
-        return null;
-    }
-
-    @Override
-    public int createTicket(Ticket ticket) {
-        return 0;
-    }
-
-    @Override
-    public int updateTicket(Ticket ticket) {
-        return 0;
-    }
-
-    @Override
-    public int deleteTicket(int ticketId) {
-        return 0;
-    }
-
-    @Override
-    public int createPassenger(Passenger passenger) {
-        return 0;
-    }
 
     @Override
     public Ticket buyTicket(PassengerModel passenger, int flightId, int seatId) {
@@ -98,11 +61,6 @@ public class TicketService implements ITicketService{
                 ticket.setBookingId(null);
                 existSeat.setStatus("reserved");
                 seatRepository.save(existSeat);
-                //Ticket saved_ticket = ticketRepository.save(ticket);
-                //Integer contextObj = saved_ticket.getId();
-                //StateMachineContext<TicketState, TicketEvent> context = new DefaultStateMachineContext<>(TicketState.UNPAID, null, null, null, null, "ticketStateMachine");
-                //jpaPersist.write(context, contextObj);
-                //return saved_ticket;
                 return ticketRepository.save(ticket);
             }
         }
@@ -120,27 +78,57 @@ public class TicketService implements ITicketService{
             if (timeElapsed.toMinutes() >= 10) {
                 ticket.setStatus("UNABLE_TO_PAY");
                 ticketRepository.save(ticket);
-                //stateMachine.start();
-                //stateMachine.getExtendedState().getVariables().put("ticketId", ticket.getId());
-                //stateMachine.sendEvent(TicketEvent.UNABLE);
-                //Integer contextObj = ticket.getId();
-                //StateMachineContext<TicketState, TicketEvent> context = new DefaultStateMachineContext<>(stateMachine.getState().getId(), null, null, null, null, "ticketStateMachine");
-                //jpaPersist.write(context, contextObj);
             }
         }
     }
 
 
-
-
     @Override
     public boolean makePayment(int ticketId, PaymentModel paymentInfo) {
-        return false;
+        return true;
     }
 
     @Override
-    public int reserveTicket(int ticketId) {
-        return 1;
+    public Ticket reserveTicket(int ticketId) {
+        Optional<Ticket> ticket = ticketRepository.findById(ticketId);
+        if(ticket.isPresent()){
+            Ticket existTicket = ticket.get();
+            if(existTicket.getStatus().equals("UNPAID")){
+                Booking booking = new Booking();
+                booking.setBookingDate(LocalDateTime.now());
+                booking.setCode(UUID.randomUUID().toString());
+                booking.setStatus("CONFIRMED");
+                Booking saved_booking = bookingRepository.save(booking);
+                existTicket.setBookingId(saved_booking.getId());
+                existTicket.setStatus("BOOKED");
+                return ticketRepository.save(existTicket);
+            }
+            return null;
+        }
+        return null;
+    }
+
+    @Scheduled(fixedRate = 60000)
+    @Transactional
+    public void checkBookingStatus() {
+        LocalDateTime currentTime = LocalDateTime.now();
+        List<Booking> unpaidBookings = bookingRepository.findByStatus("CONFIRMED");
+        logger.info("cheking booking's status");
+        for (Booking booking : unpaidBookings) {
+            Duration timeElapsed = Duration.between(booking.getBookingDate(), currentTime);
+            if (timeElapsed.toHours() >= 36) {
+                booking.setStatus("EXPIRED");
+                bookingRepository.save(booking);
+                List<Ticket> unpaidTickets = ticketRepository.findByBookingId(booking.getId());
+                for(Ticket ticket: unpaidTickets){
+                    ticket.setStatus("EXPIRED");
+                    Flight_seat seat = seatRepository.findById(ticket.getSeatId()).get();
+                    seat.setStatus("available");
+                    ticketRepository.save(ticket);
+                    seatRepository.save(seat);
+                }
+            }
+        }
     }
 
     @Override
@@ -164,17 +152,30 @@ public class TicketService implements ITicketService{
 
     @Override
     public Booking getBookingById(Integer bookingId) {
+        Optional<Booking> booking = bookingRepository.findById(bookingId);
+        if(booking.isPresent()){
+            return booking.get();
+        }
         return null;
     }
 
     @Override
     public Booking getBookingByCode(String code) {
+        Optional<Booking> booking = bookingRepository.findByCode(code);
+        if(booking.isPresent()){
+            return booking.get();
+        }
         return null;
     }
 
     @Override
     public int updateBooking(Booking booking) {
-        return 0;
+        if (bookingRepository.existsById(booking.getId())) {
+            bookingRepository.save(booking);
+            return booking.getId();
+        } else {
+            return -1;
+        }
     }
 
     @Override
@@ -193,22 +194,36 @@ public class TicketService implements ITicketService{
     }
 
     @Override
-    public Flight_seat getSeatById(int ticketId) {
+    public Flight_seat getSeatById(int seatId) {
+        Optional<Flight_seat> seat = seatRepository.findById(seatId);
+        if(seat.isPresent()){
+            return seat.get();
+        }
         return null;
     }
 
     @Override
     public int updateSeat(Flight_seat seat) {
-        return 0;
+        if (seatRepository.existsById(seat.getId())) {
+            seatRepository.save(seat);
+            return seat.getId();
+        } else {
+            return -1;
+        }
     }
 
     @Override
     public List<Flight_seat> getSeatsByFlightId(int flightId) {
-        return null;
+        List<Flight_seat> seats = seatRepository.findByFlightId(flightId);
+        return seats;
     }
 
     @Override
-    public Ticket getTicketByCode(String ticketCode) {
+    public Ticket getTicketByCode(String code) {
+        Optional<Ticket> ticket = ticketRepository.findByCode(code);
+        if(ticket.isPresent()){
+            return ticket.get();
+        }
         return null;
     }
 }
