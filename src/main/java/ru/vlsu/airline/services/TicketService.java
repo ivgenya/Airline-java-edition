@@ -4,15 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.vlsu.airline.dto.BoardingPassModel;
 import ru.vlsu.airline.dto.PassengerModel;
 import ru.vlsu.airline.dto.PaymentModel;
+import ru.vlsu.airline.dto.TicketModel;
 import ru.vlsu.airline.entities.*;
 import ru.vlsu.airline.repositories.*;
-import ru.vlsu.airline.statemachine.model.TicketEvent;
 import ru.vlsu.airline.statemachine.model.TicketState;
 
 
@@ -38,48 +37,44 @@ public class TicketService implements ITicketService{
     private FlightRepository flightRepository;
     @Autowired
     private FlightSeatRepository seatRepository;
+    @Autowired
+    private UserRepository userRepository;
 
 
 
     @Override
-    public Ticket buyTicket(PassengerModel passenger, int flightId, int seatId) {
-        Passenger newPassenger = passengerRepository.save(new Passenger(passenger));
+    @Transactional
+    public TicketModel buyTicket(PassengerModel passenger, int flightId, int seatId, User user) {
+        Passenger newPassenger = new Passenger(passenger);
         Optional<Flight> flight = flightRepository.findById(flightId);
         if (flight.isPresent()) {
             Flight existFlight = flight.get();
+            logger.info(existFlight.getStatus());
             Optional<Flight_seat> seat = seatRepository.findById(seatId);
             if(seat.isPresent() && seat.get().getStatus().equals("available")){
-                Flight_seat existSeat = seat.get();
-                Ticket ticket = new Ticket();
-                ticket.setCode(UUID.randomUUID().toString());
-                ticket.setStatus("UNPAID");
-                ticket.setBaggageType("economy");
-                ticket.setDateOfPurchase(LocalDateTime.now());
-                ticket.setPassengerId(newPassenger.getId());
-                ticket.setFlightId(existFlight.getId());
-                ticket.setSeatId(existSeat.getId());
-                ticket.setBookingId(null);
-                existSeat.setStatus("reserved");
-                seatRepository.save(existSeat);
-                return ticketRepository.save(ticket);
+                Optional<User> optionalUser = userRepository.findById(user.getId());
+                if (optionalUser.isPresent()) {
+                    User managedUser = optionalUser.get();
+                    Flight_seat existSeat = seat.get();
+                    Ticket ticket = new Ticket();
+                    ticket.setCode(UUID.randomUUID().toString());
+                    ticket.setStatus("UNPAID");
+                    ticket.setBaggageType("economy");
+                    ticket.setDateOfPurchase(LocalDateTime.now());
+                    ticket.setPassenger(newPassenger);
+                    logger.info(newPassenger.getName());
+                    ticket.setFlight(existFlight);
+                    ticket.setSeat(existSeat);
+                    ticket.setUser(managedUser);
+                    ticket.setBooking(null);
+                    existSeat.setStatus("reserved");
+                    seatRepository.save(existSeat);
+                    Ticket savedTicket = ticketRepository.save(ticket);
+                    return convertToTicketModel(savedTicket);
+                }
             }
         }
         return null;
-    }
-
-    @Scheduled(fixedRate = 60000)
-    @Transactional
-    public void checkTicketStatus() {
-        LocalDateTime currentTime = LocalDateTime.now();
-        List<Ticket> unpaidTickets = ticketRepository.findByStatus(TicketState.UNPAID.toString());
-        logger.info("cheking ticket's status");
-        for (Ticket ticket : unpaidTickets) {
-            Duration timeElapsed = Duration.between(ticket.getDateOfPurchase(), currentTime);
-            if (timeElapsed.toMinutes() >= 10) {
-                ticket.setStatus("UNABLE_TO_PAY");
-                ticketRepository.save(ticket);
-            }
-        }
     }
 
 
@@ -89,7 +84,8 @@ public class TicketService implements ITicketService{
     }
 
     @Override
-    public Ticket reserveTicket(int ticketId) {
+    @Transactional
+    public TicketModel reserveTicket(int ticketId) {
         Optional<Ticket> ticket = ticketRepository.findById(ticketId);
         if(ticket.isPresent()){
             Ticket existTicket = ticket.get();
@@ -99,40 +95,19 @@ public class TicketService implements ITicketService{
                 booking.setCode(UUID.randomUUID().toString());
                 booking.setStatus("CONFIRMED");
                 Booking saved_booking = bookingRepository.save(booking);
-                existTicket.setBookingId(saved_booking.getId());
+                existTicket.setBooking(saved_booking);
                 existTicket.setStatus("BOOKED");
-                return ticketRepository.save(existTicket);
+                Ticket savedTicket = ticketRepository.save(existTicket);
+                return convertToTicketModel(savedTicket);
             }
             return null;
         }
         return null;
     }
 
-    @Scheduled(fixedRate = 60000)
-    @Transactional
-    public void checkBookingStatus() {
-        LocalDateTime currentTime = LocalDateTime.now();
-        List<Booking> unpaidBookings = bookingRepository.findByStatus("CONFIRMED");
-        logger.info("cheking booking's status");
-        for (Booking booking : unpaidBookings) {
-            Duration timeElapsed = Duration.between(booking.getBookingDate(), currentTime);
-            if (timeElapsed.toHours() >= 36) {
-                booking.setStatus("EXPIRED");
-                bookingRepository.save(booking);
-                List<Ticket> unpaidTickets = ticketRepository.findByBookingId(booking.getId());
-                for(Ticket ticket: unpaidTickets){
-                    ticket.setStatus("EXPIRED");
-                    Flight_seat seat = seatRepository.findById(ticket.getSeatId()).get();
-                    seat.setStatus("available");
-                    ticketRepository.save(ticket);
-                    seatRepository.save(seat);
-                }
-            }
-        }
-    }
 
     @Override
-    public int cancellBooking(int bookingId) {
+    public int cancelBooking(int bookingId) {
         // TODO: переделать с репозиторием
         /* booking.cancel();
         ticketService.updateBooking(booking);
@@ -190,8 +165,46 @@ public class TicketService implements ITicketService{
 
     @Override
     public BoardingPassModel getBoardingPass(int ticketId) {
+        Optional<Ticket> ticketOptional = ticketRepository.findById(ticketId);
+        if (ticketOptional.isPresent()) {
+            Ticket ticket = ticketOptional.get();
+            BoardingPassModel boardingPass = new BoardingPassModel();
+            boardingPass.setTicketId(ticket.getId());
+            boardingPass.setTicketCode(ticket.getCode());
+            boardingPass.setBookingCode(ticket.getBooking() != null ? ticket.getBooking().getCode() : null);
+            boardingPass.setBookingId(ticket.getBooking() != null ? ticket.getBooking().getId() : null);
+            boardingPass.setSurname(ticket.getPassenger().getSurname());
+            boardingPass.setName(ticket.getPassenger().getName());
+            boardingPass.setDocumentNumber(ticket.getPassenger().getDocumentNumber());
+            boardingPass.setDateOfBirth(ticket.getPassenger().getDateOfBirth());
+            boardingPass.setGender(ticket.getPassenger().getGender());
+            boardingPass.setEmail(ticket.getPassenger().getEmail());
+            boardingPass.setSeat(ticket.getSeat().getPlaneSeat().getNumber());
+            boardingPass.setPrice(ticket.getSeat().getPrice());
+            boardingPass.setTicketStatus(ticket.getStatus());
+            boardingPass.setFlightClass(ticket.getSeat().getPlaneSeat().getSeatClass());
+            boardingPass.setBaggageType(ticket.getBaggageType());
+            boardingPass.setDate(ticket.getFlight().getDate());
+            boardingPass.setStatus(ticket.getFlight().getStatus());
+            boardingPass.setDateOfPurchase(ticket.getDateOfPurchase());
+            boardingPass.setGate(ticket.getFlight().getGate());
+            boardingPass.setShortName(ticket.getFlight().getSchedule().getAirline().getShortName());
+            boardingPass.setNumber(ticket.getFlight().getSchedule().getNumber());
+            boardingPass.setDepShortName(ticket.getFlight().getSchedule().getDepartureAirport().getShortName());
+            boardingPass.setDepCity(ticket.getFlight().getSchedule().getDepartureAirport().getCity());
+            boardingPass.setArrShortName(ticket.getFlight().getSchedule().getArrivalAirport().getShortName());
+            boardingPass.setArrCity(ticket.getFlight().getSchedule().getArrivalAirport().getCity());
+            boardingPass.setDepartureTime(ticket.getFlight().getSchedule().getDepartureTime());
+            boardingPass.setArrivalTime(ticket.getFlight().getSchedule().getArrivalTime());
+            boardingPass.setFlightDuration(ticket.getFlight().getSchedule().getFlightDuration());
+            boardingPass.setTerminal(ticket.getFlight().getSchedule().getTerminal().getName());
+            boardingPass.setBookingDate(ticket.getBooking() != null ? ticket.getBooking().getBookingDate() : null);
+            boardingPass.setBookingStatus(ticket.getBooking() != null ? ticket.getBooking().getStatus() : null);
+            return boardingPass;
+        }
         return null;
     }
+
 
     @Override
     public Flight_seat getSeatById(int seatId) {
@@ -225,5 +238,27 @@ public class TicketService implements ITicketService{
             return ticket.get();
         }
         return null;
+    }
+
+    public TicketModel convertToTicketModel(Ticket ticket){
+        TicketModel ticketModel = new TicketModel();
+        ticketModel.setCode(ticket.getCode());
+        ticketModel.setPassengerId(ticket.getPassenger().getId());
+        ticketModel.setFlightId(ticket.getFlight().getId());
+        ticketModel.setSeatId(ticket.getSeat().getId());
+        ticketModel.setDateOfPurchase(ticket.getDateOfPurchase());
+        if(ticket.getBooking() == null){
+            ticketModel.setBookingId(null);
+        }else{
+            ticketModel.setBookingId(ticket.getBooking().getId());
+        }
+        ticketModel.setStatus(ticket.getStatus());
+        ticketModel.setBaggageType(ticket.getBaggageType());
+        if(ticket.getUser() == null){
+            ticketModel.setUserId(null);
+        }else{
+            ticketModel.setUserId(ticket.getUser().getId());
+        }
+        return ticketModel;
     }
 }

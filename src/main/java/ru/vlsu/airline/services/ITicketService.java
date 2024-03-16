@@ -3,18 +3,16 @@ package ru.vlsu.airline.services;
 import ru.vlsu.airline.dto.BoardingPassModel;
 import ru.vlsu.airline.dto.PassengerModel;
 import ru.vlsu.airline.dto.PaymentModel;
-import ru.vlsu.airline.entities.Booking;
-import ru.vlsu.airline.entities.Flight_seat;
-import ru.vlsu.airline.entities.Passenger;
-import ru.vlsu.airline.entities.Ticket;
+import ru.vlsu.airline.dto.TicketModel;
+import ru.vlsu.airline.entities.*;
 
 import java.util.List;
 
 public interface ITicketService {
-    Ticket buyTicket(PassengerModel passenger, int flightId, int seatId);
+    TicketModel buyTicket(PassengerModel passenger, int flightId, int seatId, User user);
     boolean makePayment(int ticketId, PaymentModel paymentInfo);
-    Ticket reserveTicket(int ticketId);
-    int cancellBooking(int bookingId);
+    TicketModel reserveTicket(int ticketId);
+    int cancelBooking(int bookingId);
     Booking getBookingById(Integer bookingId);
     Booking getBookingByCode(String code);
     int updateBooking(Booking booking);

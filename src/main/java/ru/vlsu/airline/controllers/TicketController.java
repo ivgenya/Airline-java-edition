@@ -1,17 +1,24 @@
 package ru.vlsu.airline.controllers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import ru.vlsu.airline.dto.BoardingPassModel;
 import ru.vlsu.airline.dto.PassengerModel;
 import ru.vlsu.airline.dto.PaymentModel;
+import ru.vlsu.airline.dto.TicketModel;
 import ru.vlsu.airline.entities.Booking;
 import ru.vlsu.airline.entities.Flight_seat;
 import ru.vlsu.airline.entities.Ticket;
+import ru.vlsu.airline.entities.User;
 import ru.vlsu.airline.services.ITicketService;
+import ru.vlsu.airline.services.TicketService;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -19,6 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/ticket")
 public class TicketController {
+    private static final Logger logger = LoggerFactory.getLogger(TicketController.class);
     @Autowired
     private ITicketService ticketService;
 
@@ -26,7 +34,14 @@ public class TicketController {
     public ResponseEntity<?> buyTicket(@Valid @RequestBody PassengerModel passengerModel,
                                             @RequestParam int flightId,
                                             @RequestParam int seatId) {
-        Ticket ticket = ticketService.buyTicket(passengerModel, flightId, seatId);
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return null;
+        }
+        Object principal = auth.getPrincipal();
+        User user = (principal instanceof User) ? (User) principal : null;
+        TicketModel ticket = ticketService.buyTicket(passengerModel, flightId, seatId, user);
         if(ticket == null){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Произошла ошибка при покупке");
         }
@@ -35,7 +50,7 @@ public class TicketController {
 
     @PostMapping(value = "/book/{ticketId}", produces = "application/json")
     public ResponseEntity<?> bookTicket(@PathVariable int ticketId) {
-        Ticket ticket = ticketService.reserveTicket(ticketId);
+        TicketModel ticket = ticketService.reserveTicket(ticketId);
         if (ticket == null) {
             return new ResponseEntity<>("Билет не найден", HttpStatus.NOT_FOUND);
         }
@@ -110,7 +125,7 @@ public class TicketController {
         if (!booking.getStatus().equals("confirmed")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Невозможно отменить бронирование");
         }
-        ticketService.cancellBooking(booking.getId());
+        ticketService.cancelBooking(booking.getId());
         return ResponseEntity.ok("Бронирование отменено");
     }
 
