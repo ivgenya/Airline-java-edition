@@ -17,23 +17,13 @@ public class Flight_seat {
     @Column(name = "status", nullable = false)
     private String status;
 
-    @Column(name = "plane_seat_id", nullable = false)
-    private String planeSeatId;
-
-    @Column(name = "flight_id", nullable = false)
-    private String flightId;
-
-    @ManyToOne
-    @JoinColumn(name = "plane_seat_id", insertable = false, updatable = false)
-    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "plane_seat_id")
     private Plane_seat planeSeat;
 
-    @ManyToOne
-    @JoinColumn(name = "flight_id", insertable = false, updatable = false)
-    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "flight_id")
     private Flight flight;
-
-
 
     public Flight_seat() {
     }
