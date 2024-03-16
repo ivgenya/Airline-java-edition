@@ -32,7 +32,7 @@ public class FlightController {
 
     @PostMapping
     public ResponseEntity<String> createSchedule(@Valid @RequestBody FlightModel flightModel) {
-        Flight flight = convertToEntity(flightModel);
+        Flight flight = flightService.convertToEntity(flightModel);
         int result = flightService.addFlight(flight);
 
         if (result > 0) {
@@ -72,15 +72,6 @@ public class FlightController {
         return ResponseEntity.ok(flights);
     }
 
-    private Flight convertToEntity(FlightModel flightModel) {
-        Flight flight = new Flight();
-        flight.setScheduleId(flightModel.getScheduleId());
-        flight.setDate(flightModel.getDate());
-        flight.setPlaneId(flightModel.getPlaneId());
-        flight.setType(flightModel.getType());
-        flight.setStatus(flightModel.getStatus());
-        flight.setGate(flightModel.getGate());
-        return flight;
-    }
+
 
 }

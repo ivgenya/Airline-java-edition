@@ -30,7 +30,7 @@ public class ScheduleController {
 
     @PostMapping
     public ResponseEntity<String> createSchedule(@Valid @RequestBody ScheduleModel scheduleModel) {
-        Schedule schedule = convertToEntity(scheduleModel);
+        Schedule schedule = scheduleService.convertToEntity(scheduleModel);
         int result = scheduleService.addSchedule(schedule);
 
         if (result > 0) {
@@ -61,17 +61,6 @@ public class ScheduleController {
         }
     }
 
-    private Schedule convertToEntity(ScheduleModel scheduleModel) {
-        Schedule schedule = new Schedule();
-        schedule.setAirlineId(scheduleModel.getAirlineId());
-        schedule.setNumber(scheduleModel.getNumber());
-        schedule.setDepartureAirportId(scheduleModel.getDepartureAirportId());
-        schedule.setArrivalAirportId(scheduleModel.getArrivalAirportId());
-        schedule.setDepartureTime(scheduleModel.getDepartureTime());
-        schedule.setArrivalTime(scheduleModel.getArrivalTime());
-        schedule.setFlightDuration(scheduleModel.getFlightDuration());
-        schedule.setTerminal(scheduleModel.getTerminal());
-        return schedule;
-    }
+
 
 }
