@@ -12,7 +12,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 @ComponentScan(basePackages = "ru.vlsu.airline")
 @EnableJpaRepositories(basePackages = "ru.vlsu.airline.repositories")
 @EnableTransactionManagement
-@EnableScheduling
+//@EnableScheduling
 public class AppConfig {
 
 }
