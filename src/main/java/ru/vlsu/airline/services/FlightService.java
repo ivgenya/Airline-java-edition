@@ -2,9 +2,13 @@ package ru.vlsu.airline.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.vlsu.airline.dto.FlightModel;
 import ru.vlsu.airline.entities.Flight;
+import ru.vlsu.airline.entities.Plane;
 import ru.vlsu.airline.entities.Schedule;
+import ru.vlsu.airline.repositories.BookingRepository;
 import ru.vlsu.airline.repositories.FlightRepository;
+import ru.vlsu.airline.repositories.PlaneRepository;
 import ru.vlsu.airline.repositories.ScheduleRepository;
 
 import java.time.LocalDate;
@@ -14,12 +18,12 @@ import java.util.Optional;
 @Service
 public class FlightService implements IFlightService{
 
-    private final FlightRepository flightRepository;
-
     @Autowired
-    public FlightService(FlightRepository flightRepository) {
-        this.flightRepository = flightRepository;
-    }
+    private FlightRepository flightRepository;
+    @Autowired
+    private ScheduleRepository scheduleRepository;
+    @Autowired
+    private PlaneRepository planeRepository;
     @Override
     public List<Flight> getAllFlights() {
         return flightRepository.findAll();
@@ -63,5 +67,22 @@ public class FlightService implements IFlightService{
     @Override
     public List<Flight> getFlightsByCities(String departureCity, String arrivalCity, LocalDate date) {
         return flightRepository.findByDepartureCityAndArrivalCityAndDate(departureCity, arrivalCity, date);
+    }
+    @Override
+    public Flight convertToEntity(FlightModel flightModel) {
+        Flight flight = new Flight();
+        Optional<Schedule> optionalSchedule = scheduleRepository.findById(flightModel.getScheduleId());
+        if (optionalSchedule.isPresent()) {
+            flight.setSchedule(optionalSchedule.get());
+        }
+        flight.setDate(flightModel.getDate());
+        Optional<Plane> optionalPlane = planeRepository.findById(flightModel.getPlaneId());
+        if (optionalPlane.isPresent()) {
+            flight.setPlane(optionalPlane.get());
+        }
+        flight.setType(flightModel.getType());
+        flight.setStatus(flightModel.getStatus());
+        flight.setGate(flightModel.getGate());
+        return flight;
     }
 }

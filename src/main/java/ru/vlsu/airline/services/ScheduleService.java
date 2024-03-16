@@ -2,9 +2,9 @@ package ru.vlsu.airline.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.vlsu.airline.entities.Flight;
-import ru.vlsu.airline.entities.Schedule;
-import ru.vlsu.airline.repositories.ScheduleRepository;
+import ru.vlsu.airline.dto.ScheduleModel;
+import ru.vlsu.airline.entities.*;
+import ru.vlsu.airline.repositories.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,12 +12,14 @@ import java.util.Optional;
 @Service
 public class ScheduleService implements IScheduleService{
 
-    private final ScheduleRepository scheduleRepository;
-
     @Autowired
-    public ScheduleService(ScheduleRepository scheduleRepository) {
-        this.scheduleRepository = scheduleRepository;
-    }
+    private ScheduleRepository scheduleRepository;
+    @Autowired
+    private AirlineRepository airlineRepository;
+    @Autowired
+    private AirportRepository airportRepository;
+    @Autowired
+    private TerminalRepository terminalRepository;
 
     @Override
     public List<Schedule> getAllSchedule() {
@@ -57,5 +59,31 @@ public class ScheduleService implements IScheduleService{
         } else {
             return -1;
         }
+    }
+
+    @Override
+    public Schedule convertToEntity(ScheduleModel scheduleModel) {
+        Schedule schedule = new Schedule();
+        Optional<Airline> optionalAirline = airlineRepository.findById(scheduleModel.getAirlineId());
+        if (optionalAirline.isPresent()) {
+            schedule.setAirline(optionalAirline.get());
+        }
+        schedule.setNumber(scheduleModel.getNumber());
+        Optional<Airport> optionalAirport = airportRepository.findById(scheduleModel.getDepartureAirportId());
+        if (optionalAirport.isPresent()) {
+            schedule.setDepartureAirport(optionalAirport.get());
+        }
+        Optional<Airport> optionalArrivalAirport = airportRepository.findById(scheduleModel.getArrivalAirportId());
+        if (optionalArrivalAirport.isPresent()) {
+            schedule.setArrivalAirport(optionalArrivalAirport.get());
+        }
+        schedule.setDepartureTime(scheduleModel.getDepartureTime());
+        schedule.setArrivalTime(scheduleModel.getArrivalTime());
+        schedule.setFlightDuration(scheduleModel.getFlightDuration());
+        Optional<Terminal> optionalTerminal = terminalRepository.findById(scheduleModel.getTerminal());
+        if (optionalTerminal.isPresent()) {
+            schedule.setTerminal(optionalTerminal.get());
+        }
+        return schedule;
     }
 }
