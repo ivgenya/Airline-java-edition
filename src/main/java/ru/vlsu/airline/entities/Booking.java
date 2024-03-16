@@ -24,9 +24,7 @@ public class Booking {
     @Column(name = "status", nullable = false)
     private String status;
 
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "booking")
     private List<Ticket> tickets;
 
     public Booking() {

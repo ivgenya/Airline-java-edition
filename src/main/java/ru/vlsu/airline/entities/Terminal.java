@@ -18,11 +18,14 @@ public class Terminal {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @JoinColumn(name = "airport_id")
+    @ManyToOne(cascade = CascadeType.ALL)
+    private Airport airport;
+
     @Column(name = "type", nullable = false)
     private String type;
 
     @OneToMany(mappedBy = "terminal")
-    @JsonIgnore
     private List<Schedule> schedules;
 
     public Terminal() {

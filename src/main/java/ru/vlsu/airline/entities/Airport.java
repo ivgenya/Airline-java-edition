@@ -27,13 +27,15 @@ public class Airport {
     @Column(name = "country", nullable = false)
     private String country;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "arrivalAirport")
     private List<Schedule> scheduleArrivalAirports;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "departureAirport")
     private List<Schedule> scheduleDepartureAirports;
+
+    @OneToMany(mappedBy = "airport")
+    private List<Terminal> terminalAirports;
+
 
     public Airport() {
     }
@@ -92,6 +94,14 @@ public class Airport {
 
     public void setScheduleDepartureAirports(List<Schedule> scheduleDepartureAirports) {
         this.scheduleDepartureAirports = scheduleDepartureAirports;
+    }
+
+    public List<Terminal> getTerminalAirports() {
+        return terminalAirports;
+    }
+
+    public void setTerminalAirports(List<Terminal> terminalAirports) {
+        this.terminalAirports = terminalAirports;
     }
 }
 

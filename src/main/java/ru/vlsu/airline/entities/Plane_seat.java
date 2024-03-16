@@ -12,18 +12,14 @@ public class Plane_seat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-
-    @Column(name = "plane_id", nullable = false)
-    private int planeId;
     @Column(name="class", nullable = false)
     private String seatClass;
 
     @Column(name="number", nullable = false)
     private String number;
 
-    @ManyToOne
-    @JoinColumn(name = "plane_id", insertable = false, updatable = false)
-    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "plane_id")
     private Plane plane;
 
     public Plane_seat() {

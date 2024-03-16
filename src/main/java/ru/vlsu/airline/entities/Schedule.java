@@ -1,13 +1,9 @@
 package ru.vlsu.airline.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import javax.persistence.*;
-import java.io.Serializable;
 import java.time.LocalTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
 
 @Entity
 @Table(name = "schedule")
@@ -17,14 +13,6 @@ public class Schedule{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "airline_id", nullable = false)
-    private int airlineId;
-
-    @Column(name = "departure_airport_id", nullable = false)
-    private int departureAirportId;
-
-    @Column(name = "arrival_airport_id", nullable = false)
-    private int arrivalAirportId;
     @Column(name = "number", nullable = false)
     private int number;
 
@@ -37,27 +25,24 @@ public class Schedule{
     @Column(name = "flight_duration", nullable = false)
     private LocalTime flightDuration;
 
-    @Column(name = "terminal", nullable = false)
-    private int terminal;
+    @JoinColumn(name = "terminal")
+    @ManyToOne(cascade = CascadeType.ALL)
+    private Terminal terminal;
 
-    @JoinColumn(name = "airline_id", insertable = false, updatable = false)
-    @JsonIgnore
-    @ManyToOne
+    @JoinColumn(name = "airline_id")
+    @ManyToOne(cascade = CascadeType.ALL)
     private Airline airline;
 
-    @JoinColumn(name = "departure_airport_id", insertable = false, updatable = false)
-    @JsonIgnore
-    @ManyToOne
+    @JoinColumn(name = "departure_airport_id")
+    @ManyToOne(cascade = CascadeType.ALL)
     private Airport departureAirport;
 
 
-    @JoinColumn(name = "arrival_airport_id", insertable = false, updatable = false)
-    @JsonIgnore
-    @ManyToOne
+    @JoinColumn(name = "arrival_airport_id")
+    @ManyToOne(cascade = CascadeType.ALL)
     private Airport arrivalAirport;
 
     @OneToMany(mappedBy = "schedule")
-    @JsonIgnore
     private List<Flight> flights;
 
     public Schedule() {
@@ -128,13 +113,6 @@ public class Schedule{
         this.flightDuration = flightDuration;
     }
 
-    public int getTerminal() {
-        return terminal;
-    }
-
-    public void setTerminal(int terminal) {
-        this.terminal = terminal;
-    }
 
     public List<Flight> getFlights() {
         return flights;
@@ -144,28 +122,13 @@ public class Schedule{
         this.flights = flights;
     }
 
-    public int getAirlineId() {
-        return airlineId;
+
+    public Terminal getTerminal() {
+        return terminal;
     }
 
-    public void setAirlineId(int airlineId) {
-        this.airlineId = airlineId;
-    }
-
-    public int getDepartureAirportId() {
-        return departureAirportId;
-    }
-
-    public void setDepartureAirportId(int departureAirportId) {
-        this.departureAirportId = departureAirportId;
-    }
-
-    public int getArrivalAirportId() {
-        return arrivalAirportId;
-    }
-
-    public void setArrivalAirportId(int arrivalAirportId) {
-        this.arrivalAirportId = arrivalAirportId;
+    public void setTerminal(Terminal terminal) {
+        this.terminal = terminal;
     }
 }
 

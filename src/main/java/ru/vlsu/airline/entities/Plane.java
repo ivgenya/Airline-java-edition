@@ -17,11 +17,9 @@ public class Plane {
     private String planeName;
 
     @OneToMany(mappedBy = "plane")
-    @JsonIgnore
     private List<Flight> flights;
 
     @OneToMany(mappedBy = "plane")
-    @JsonIgnore
     private List<Plane_seat> seats;
 
     public Plane() {

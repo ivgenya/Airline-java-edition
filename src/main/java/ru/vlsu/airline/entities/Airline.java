@@ -22,6 +22,8 @@ public class Airline {
     @Column(name = "country", nullable = false)
     private String country;
 
+    @OneToMany(mappedBy = "airline")
+    private List<Schedule> scheduleAirlines;
 
     public Airline() {
 

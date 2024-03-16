@@ -14,14 +14,8 @@ public class Flight {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "schedule_id")
-    private int scheduleId;
-
     @Column(name = "date")
     private LocalDate date;
-
-    @Column(name = "plane_id")
-    private int planeId;
 
     @Column(name = "type")
     private String type;
@@ -32,22 +26,18 @@ public class Flight {
     @Column(name = "gate")
     private int gate;
 
-    @ManyToOne
-    @JoinColumn(name = "plane_id", insertable = false, updatable = false)
-    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "plane_id")
     private Plane plane;
 
-    @ManyToOne
-    @JoinColumn(name = "schedule_id", insertable = false, updatable = false)
-    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "schedule_id")
     private Schedule schedule;
 
     @OneToMany(mappedBy = "flight")
-    @JsonIgnore
     private List<Flight_seat> seats;
 
     @OneToMany(mappedBy = "flight")
-    @JsonIgnore
     private List<Ticket> tickets;
 
     public int getId() {
@@ -58,28 +48,12 @@ public class Flight {
         this.id = id;
     }
 
-    public int getScheduleId() {
-        return scheduleId;
-    }
-
-    public void setScheduleId(int scheduleId) {
-        this.scheduleId = scheduleId;
-    }
-
     public LocalDate getDate() {
         return date;
     }
 
     public void setDate(LocalDate date) {
         this.date = date;
-    }
-
-    public int getPlaneId() {
-        return planeId;
-    }
-
-    public void setPlaneId(int planeId) {
-        this.planeId = planeId;
     }
 
     public String getType() {

@@ -35,7 +35,6 @@ public class Passenger {
     private String email;
 
     @OneToMany(mappedBy = "passenger", cascade = CascadeType.ALL)
-    @JsonIgnore
     private List<Ticket> tickets;
     public Passenger(){}
 
