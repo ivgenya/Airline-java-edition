@@ -1,8 +1,12 @@
 package ru.vlsu.airline.services;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +19,9 @@ import ru.vlsu.airline.repositories.*;
 import ru.vlsu.airline.statemachine.model.TicketState;
 
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -154,12 +161,39 @@ public class TicketService implements ITicketService{
     }
 
     @Override
-    public byte[] generateBoardingPass(BoardingPassModel model) {
-        return new byte[0];
+    public byte[] generateBoardingPass(BoardingPassModel model) throws IOException {
+        try(ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            InputStream templateStream = new ClassPathResource("templates/template_bp.pdf").getInputStream()){
+            PDDocument pdfDocument = PDDocument.load(templateStream);
+            PDDocumentCatalog docCatalog = pdfDocument.getDocumentCatalog();
+            PDAcroForm form = docCatalog.getAcroForm();
+
+            form.getField("passenger").setValue(model.getSurname().toUpperCase() + " " + model.getName().toUpperCase());
+            form.getField("from").setValue(model.getDepShortName());
+            form.getField("to").setValue(model.getArrShortName());
+            form.getField("date").setValue(model.getDate().toString());
+            form.getField("dep_time").setValue(model.getDepartureTime().toString());
+            form.getField("arr_time").setValue(model.getArrivalTime().toString());
+            form.getField("flight").setValue(model.getShortName() + model.getNumber());
+            form.getField("seat").setValue(model.getSeat());
+            form.getField("gate").setValue(Integer.toString(model.getGate()));
+            form.getField("from_small").setValue(model.getDepShortName());
+            form.getField("to_small").setValue(model.getArrShortName());
+            form.getField("date_small").setValue(model.getDate().toString() + " " + model.getDepartureTime().toString());
+            form.getField("flight_small").setValue(model.getShortName() + model.getNumber());
+            form.getField("seat_small").setValue(model.getSeat());
+            form.getField("gate_small").setValue(Integer.toString(model.getGate()));
+
+            form.flatten();
+            pdfDocument.save(bos);
+            pdfDocument.close();
+
+            return bos.toByteArray();
+        }
     }
 
     @Override
-    public byte[] generateTicket(BoardingPassModel model) {
+    public byte[] generateTicket(BoardingPassModel model){
         return new byte[0];
     }
 
