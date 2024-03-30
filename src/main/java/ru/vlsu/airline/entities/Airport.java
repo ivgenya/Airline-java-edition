@@ -3,6 +3,7 @@ package ru.vlsu.airline.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,13 +29,13 @@ public class Airport {
     private String country;
 
     @OneToMany(mappedBy = "arrivalAirport")
-    private List<Schedule> scheduleArrivalAirports;
+    private List<Schedule> scheduleArrivalAirports = new ArrayList<Schedule>();
 
     @OneToMany(mappedBy = "departureAirport")
-    private List<Schedule> scheduleDepartureAirports;
+    private List<Schedule> scheduleDepartureAirports = new ArrayList<Schedule>();
 
     @OneToMany(mappedBy = "airport")
-    private List<Terminal> terminalAirports;
+    private List<Terminal> terminalAirports = new ArrayList<Terminal>();
 
 
     public Airport() {

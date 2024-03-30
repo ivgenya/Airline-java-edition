@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -35,10 +36,10 @@ public class Flight {
     private Schedule schedule;
 
     @OneToMany(mappedBy = "flight")
-    private List<Flight_seat> seats;
+    private List<Flight_seat> seats = new ArrayList<Flight_seat>();
 
     @OneToMany(mappedBy = "flight")
-    private List<Ticket> tickets;
+    private List<Ticket> tickets = new ArrayList<Ticket>();
 
     public int getId() {
         return id;

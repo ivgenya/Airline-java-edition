@@ -3,6 +3,7 @@ package ru.vlsu.airline.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -17,10 +18,10 @@ public class Plane {
     private String planeName;
 
     @OneToMany(mappedBy = "plane")
-    private List<Flight> flights;
+    private List<Flight> flights = new ArrayList<>();
 
     @OneToMany(mappedBy = "plane")
-    private List<Plane_seat> seats;
+    private List<Plane_seat> seats = new ArrayList<>();
 
     public Plane() {
     }

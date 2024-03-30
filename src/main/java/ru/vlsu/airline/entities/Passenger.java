@@ -5,6 +5,7 @@ import ru.vlsu.airline.dto.PassengerModel;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -35,7 +36,7 @@ public class Passenger {
     private String email;
 
     @OneToMany(mappedBy = "passenger", cascade = CascadeType.ALL)
-    private List<Ticket> tickets;
+    private List<Ticket> tickets = new ArrayList<Ticket>();;
     public Passenger(){}
 
     public Passenger(PassengerModel passengerModel) {
