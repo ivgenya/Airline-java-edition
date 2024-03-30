@@ -8,6 +8,7 @@ import java.util.List;
 public interface IAdminUserService {
     List<UserDTO> getAllUsers();
     User getUser(int userId);
+    String getUserRole(String token);
     int deleteUser (int userId);
     int changerUserRole(ChangeRoleDTO userRole);
     int createUser(CreateUserDTO newUser);

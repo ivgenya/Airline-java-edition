@@ -32,12 +32,23 @@ public class AdminUserService implements IAdminUserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtTokenService jwtTokenService;
+
     @Override
     public List<UserDTO> getAllUsers() {
         List<User> users = userRepository.findAll();
         return users.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public String getUserRole(String token){
+        String jwtToken = token.substring(7);
+        String username = jwtTokenService.extractUsername(jwtToken);
+        User user = userRepository.findByEmail(username);
+        return user.getRole().getRoleName();
     }
 
     @Override

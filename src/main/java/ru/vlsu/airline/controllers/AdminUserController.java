@@ -11,6 +11,7 @@ import ru.vlsu.airline.entities.User;
 import ru.vlsu.airline.repositories.RoleRepository;
 import ru.vlsu.airline.services.AdminUserService;
 import ru.vlsu.airline.services.IAdminUserService;
+import ru.vlsu.airline.services.JwtTokenService;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -25,6 +26,14 @@ public class AdminUserController {
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers(){
         return ResponseEntity.ok(adminUserService.getAllUsers());
+    }
+
+    @GetMapping("/getuserrole")
+    public ResponseEntity<String> getUserRole(@RequestHeader("Authorization") String token){
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.ok("Unauthorized");
+        }
+        return ResponseEntity.ok(adminUserService.getUserRole(token));
     }
 
     @PostMapping("/add")
