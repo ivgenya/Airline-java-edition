@@ -35,7 +35,7 @@ public class Scheduler {
         logger.info("checking ticket's status");
         for (Ticket ticket : unpaidTickets) {
             Duration timeElapsed = Duration.between(ticket.getDateOfPurchase(), currentTime);
-            if (timeElapsed.toMinutes() >= 10) {
+            if (timeElapsed.toMinutes() >= 30) {
                 ticket.setStatus("UNABLE_TO_PAY");
                 ticketRepository.save(ticket);
             }
