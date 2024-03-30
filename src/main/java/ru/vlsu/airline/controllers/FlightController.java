@@ -5,6 +5,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.vlsu.airline.dto.FlightBoardModel;
 import ru.vlsu.airline.dto.FlightModel;
 import ru.vlsu.airline.entities.Flight;
 import ru.vlsu.airline.services.IFlightService;
@@ -64,11 +65,11 @@ public class FlightController {
     }
 
     @GetMapping("/board")
-    public ResponseEntity<List<Flight>> getFlightsBoard(
+    public ResponseEntity<List<FlightBoardModel>> getFlightsBoard(
             @RequestParam String departureCity,
             @RequestParam String arrivalCity,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        List<Flight> flights = flightService.getFlightsByCities(departureCity, arrivalCity, date);
+        List<FlightBoardModel> flights = flightService.getFlightsByCities(departureCity, arrivalCity, date);
         return ResponseEntity.ok(flights);
     }
 

@@ -1,6 +1,7 @@
 package ru.vlsu.airline.services;
 
 import org.springframework.stereotype.Service;
+import ru.vlsu.airline.dto.FlightBoardModel;
 import ru.vlsu.airline.dto.FlightModel;
 import ru.vlsu.airline.entities.Flight;
 import ru.vlsu.airline.entities.Schedule;
@@ -15,6 +16,6 @@ public interface IFlightService {
     int addFlight(Flight flight);
     int updateFlight(Flight flight);
     int deleteFlight(int flightId);
-    List<Flight> getFlightsByCities(String departureCity, String arrivalCity, LocalDate date);
+    List<FlightBoardModel> getFlightsByCities(String departureCity, String arrivalCity, LocalDate date);
     Flight convertToEntity(FlightModel flightModel);
 }

@@ -2,8 +2,10 @@ package ru.vlsu.airline.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.vlsu.airline.dto.FlightBoardModel;
 import ru.vlsu.airline.dto.FlightModel;
 import ru.vlsu.airline.entities.Flight;
+import ru.vlsu.airline.entities.Flight_seat;
 import ru.vlsu.airline.entities.Plane;
 import ru.vlsu.airline.entities.Schedule;
 import ru.vlsu.airline.repositories.BookingRepository;
@@ -12,6 +14,8 @@ import ru.vlsu.airline.repositories.PlaneRepository;
 import ru.vlsu.airline.repositories.ScheduleRepository;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,8 +69,39 @@ public class FlightService implements IFlightService{
     }
 
     @Override
-    public List<Flight> getFlightsByCities(String departureCity, String arrivalCity, LocalDate date) {
-        return flightRepository.findByDepartureCityAndArrivalCityAndDate(departureCity, arrivalCity, date);
+    public List<FlightBoardModel> getFlightsByCities(String departureCity, String arrivalCity, LocalDate date) {
+        List<Object[]> flightObjects = flightRepository.findByDepartureCityAndArrivalCityAndDate(departureCity, arrivalCity, date);
+        List<FlightBoardModel> flightBoardModels = new ArrayList<>();
+
+        for (Object[] row : flightObjects) {
+            Flight flight = (Flight) row[0];
+            Integer cheapestSeatPrice = (Integer) row[1];
+            FlightBoardModel dto = convertToDto(flight);
+            dto.setCheapestSeatPrice(cheapestSeatPrice.toString());
+            flightBoardModels.add(dto);
+        }
+
+        return flightBoardModels;
+    }
+
+
+    private FlightBoardModel convertToDto(Flight flight) {
+        FlightBoardModel dto = new FlightBoardModel();
+        dto.setId(String.valueOf(flight.getId()));
+        dto.setStatus(flight.getStatus());
+        dto.setType(flight.getType());
+        dto.setGate(String.valueOf(flight.getGate()));
+        dto.setAirlineShortName(flight.getSchedule().getAirline().getShortName());
+        dto.setScheduleNumber(String.valueOf(flight.getSchedule().getNumber()));
+        dto.setDepartureAirportShortName(flight.getSchedule().getDepartureAirport().getShortName());
+        dto.setDepartureAirportCity(flight.getSchedule().getDepartureAirport().getCity());
+        dto.setArrivalAirportShortName(flight.getSchedule().getArrivalAirport().getShortName());
+        dto.setArrivalAirportCity(flight.getSchedule().getArrivalAirport().getCity());
+        dto.setDate(flight.getDate().toString());
+        dto.setDepartureTime(flight.getSchedule().getDepartureTime().toString());
+        dto.setArrivalTime(flight.getSchedule().getArrivalTime().toString());
+        dto.setFlightDuration(flight.getSchedule().getFlightDuration().toString());
+        return dto;
     }
     @Override
     public Flight convertToEntity(FlightModel flightModel) {

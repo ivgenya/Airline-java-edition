@@ -12,14 +12,17 @@ import java.util.List;
 @Repository
 public interface FlightRepository extends JpaRepository<Flight, Integer> {
 
-    @Query("SELECT f FROM Flight f " +
+    @Query("SELECT f, MIN(seat.price) FROM Flight f " +
             "JOIN f.schedule s " +
             "JOIN s.departureAirport da " +
             "JOIN s.arrivalAirport aa " +
+            "JOIN f.seats seat " +
             "WHERE da.city = :departureCity " +
             "AND aa.city = :arrivalCity " +
-            "AND f.date = :date")
-    List<Flight> findByDepartureCityAndArrivalCityAndDate(
+            "AND seat.status = 'available' " +
+            "AND f.date = :date " +
+            "GROUP BY f.id")
+    List<Object[]> findByDepartureCityAndArrivalCityAndDate(
             @Param("departureCity") String departureCity,
             @Param("arrivalCity") String arrivalCity,
             @Param("date") LocalDate date);
