@@ -21,6 +21,10 @@ import ru.vlsu.airline.services.ITicketService;
 import ru.vlsu.airline.services.TicketService;
 
 import javax.validation.Valid;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -52,7 +56,7 @@ public class TicketController {
     public ResponseEntity<?> bookTicket(@PathVariable int ticketId) {
         TicketModel ticket = ticketService.reserveTicket(ticketId);
         if (ticket == null) {
-            return new ResponseEntity<>("Билет не найден", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Ошибка", HttpStatus.NOT_FOUND);
         }
         return ResponseEntity.ok(ticket);
     }
@@ -82,7 +86,7 @@ public class TicketController {
         }
 
     }
-/*
+
     @PostMapping(value = "/register", produces = "application/json")
     public ResponseEntity<?> registerForFlight(@RequestParam String ticketCode) {
         Ticket ticket = ticketService.getTicketByCode(ticketCode);
@@ -104,29 +108,26 @@ public class TicketController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Регистрация на рейс закончилась");
         }
 
-        if (ticket.getStatus().equals("paid")) {
-             TODO: состояния
-            //ticketService.updateTicket(ticket);
-            //byte[] pdfBytes = ticketService.generateBoardingPass(boardingPass);
-            //return ResponseEntity.ok().body(pdfBytes);
+        if (ticket.getStatus().equals("PAID")) {
+            ticket.setStatus("USED");
+            ticketService.updateTicket(ticket);
+            byte[] pdfBytes = ticketService.generateBoardingPass(boardingPass);
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=ticket.pdf")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdfBytes);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Невозможно зарегистрировать билет");
     }
 
- */
 
     @PostMapping(value = "/cancel/{bookingId}", produces = "application/json")
     public ResponseEntity<String> cancelBooking(@PathVariable int bookingId) {
-        Booking booking = ticketService.getBookingById(bookingId);
-        if (booking == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Билет с таким номером не существует");
+        boolean bookingCancelled = ticketService.cancelBooking(bookingId);
+        if(bookingCancelled){
+            return ResponseEntity.ok("Бронирование отменено");
         }
-
-        if (!booking.getStatus().equals("confirmed")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Невозможно отменить бронирование");
-        }
-        ticketService.cancelBooking(booking.getId());
-        return ResponseEntity.ok("Бронирование отменено");
+        return ResponseEntity.ok("Произошла ошибка при отмене бронирования");
     }
 
     @GetMapping(value = "seats/{flightId}", produces = "application/json")

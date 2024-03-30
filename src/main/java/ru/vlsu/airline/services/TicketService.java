@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +22,12 @@ import ru.vlsu.airline.statemachine.model.TicketState;
 
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,6 +50,8 @@ public class TicketService implements ITicketService{
     private FlightSeatRepository seatRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private ResourceLoader resourceLoader;
 
 
 
@@ -86,9 +92,34 @@ public class TicketService implements ITicketService{
 
 
     @Override
-    public boolean makePayment(int ticketId, PaymentModel paymentInfo) {
-        return true;
+    public int updateTicket(Ticket ticket) {
+        if (ticketRepository.existsById(ticket.getId())) {
+            ticketRepository.save(ticket);
+            return ticket.getId();
+        } else {
+            return -1;
+        }
     }
+
+    @Override
+    public boolean makePayment(int ticketId, PaymentModel paymentInfo) {
+        Optional<Ticket> ticket = ticketRepository.findById(ticketId);
+        if(ticket.isPresent()){
+            if(ticket.get().getStatus().equals("UNPAID")){
+                Ticket existTicket = ticket.get();
+                existTicket.setStatus("PAID");
+                existTicket.setDateOfPurchase(LocalDateTime.now());
+                //existTicket.getBooking().setStatus("PAID"); //TODO:
+                ticketRepository.save(existTicket);
+                //bookingRepository.save(existTicket.getBooking());
+            }else{
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
 
     @Override
     @Transactional
@@ -114,22 +145,24 @@ public class TicketService implements ITicketService{
 
 
     @Override
-    public int cancelBooking(int bookingId) {
-        // TODO: переделать с репозиторием
-        /* booking.cancel();
-        ticketService.updateBooking(booking);
-
-        List<Ticket> tickets = ticketService.getTicketsByBookingId(bookingId);
-        for (Ticket ticket : tickets) {
-            ticket.cancel();
-            ticketService.updateTicket(ticket);
-
-            Flight_seat seat = ticketService.getSeatById(ticket.getSeat().);
-            seat.setStatus("available");
-            ticketService.updateSeat(seat);
+    @Transactional
+    public boolean cancelBooking(int bookingId) {
+        Optional<Booking> booking = bookingRepository.findById(bookingId);
+        if(booking.isPresent()){
+            Booking existBooking = booking.get();
+            existBooking.setStatus("CANCELLED");
+            List<Ticket> tickets = existBooking.getTickets();
+            for(Ticket ticket: tickets){
+                ticket.setStatus("CANCELLED");
+                Flight_seat seat = ticket.getSeat();
+                seat.setStatus("available");
+                ticketRepository.save(ticket);
+                seatRepository.save(seat);
+            }
+            bookingRepository.save(existBooking);
+            return true;
         }
-         */
-        return 0;
+        return false;
     }
 
     @Override
@@ -161,40 +194,89 @@ public class TicketService implements ITicketService{
     }
 
     @Override
-    public byte[] generateBoardingPass(BoardingPassModel model) throws IOException {
+    public byte[] generateBoardingPass(BoardingPassModel model) {
+        try {
         try(ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            InputStream templateStream = new ClassPathResource("templates/template_bp.pdf").getInputStream()){
-            PDDocument pdfDocument = PDDocument.load(templateStream);
-            PDDocumentCatalog docCatalog = pdfDocument.getDocumentCatalog();
-            PDAcroForm form = docCatalog.getAcroForm();
-
-            form.getField("passenger").setValue(model.getSurname().toUpperCase() + " " + model.getName().toUpperCase());
-            form.getField("from").setValue(model.getDepShortName());
-            form.getField("to").setValue(model.getArrShortName());
-            form.getField("date").setValue(model.getDate().toString());
-            form.getField("dep_time").setValue(model.getDepartureTime().toString());
-            form.getField("arr_time").setValue(model.getArrivalTime().toString());
-            form.getField("flight").setValue(model.getShortName() + model.getNumber());
-            form.getField("seat").setValue(model.getSeat());
-            form.getField("gate").setValue(Integer.toString(model.getGate()));
-            form.getField("from_small").setValue(model.getDepShortName());
-            form.getField("to_small").setValue(model.getArrShortName());
-            form.getField("date_small").setValue(model.getDate().toString() + " " + model.getDepartureTime().toString());
-            form.getField("flight_small").setValue(model.getShortName() + model.getNumber());
-            form.getField("seat_small").setValue(model.getSeat());
-            form.getField("gate_small").setValue(Integer.toString(model.getGate()));
-
-            form.flatten();
-            pdfDocument.save(bos);
-            pdfDocument.close();
-
-            return bos.toByteArray();
+            InputStream templateStream = new ClassPathResource("pdf/template_bp.pdf").getInputStream())
+            {
+                PDDocument pdfDocument = PDDocument.load(templateStream);
+                PDDocumentCatalog docCatalog = pdfDocument.getDocumentCatalog();
+                PDAcroForm form = docCatalog.getAcroForm();
+                form.getField("passenger").setValue(model.getSurname().toUpperCase() + " " + model.getName().toUpperCase());
+                form.getField("from").setValue(model.getDepShortName());
+                form.getField("to").setValue(model.getArrShortName());
+                form.getField("date").setValue(model.getDate().toString());
+                form.getField("dep_time").setValue(model.getDepartureTime().toString());
+                form.getField("arr_time").setValue(model.getArrivalTime().toString());
+                form.getField("flight").setValue(model.getShortName() + model.getNumber());
+                form.getField("seat").setValue(model.getSeat());
+                form.getField("gate").setValue(Integer.toString(model.getGate()));
+                form.getField("from_small").setValue(model.getDepShortName());
+                form.getField("to_small").setValue(model.getArrShortName());
+                form.getField("date_small").setValue(model.getDate().toString() + " " + model.getDepartureTime().toString());
+                form.getField("flight_small").setValue(model.getShortName() + model.getNumber());
+                form.getField("seat_small").setValue(model.getSeat());
+                form.getField("gate_small").setValue(Integer.toString(model.getGate()));
+                form.flatten();
+                pdfDocument.save(bos);
+                pdfDocument.close();
+                return bos.toByteArray();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        return null;
     }
 
     @Override
-    public byte[] generateTicket(BoardingPassModel model){
-        return new byte[0];
+    public byte[] generateTicket(BoardingPassModel model) {
+        try {
+            Resource resource = resourceLoader.getResource("classpath:pdf/template_ticket.pdf");
+            if (!resource.exists()) {
+                logger.info("Файл 'pdf/template_ticket.pdf' не найден.");
+                return null;
+            }
+            File file = resource.getFile();
+            logger.info(resource.toString());
+            logger.info(file.toString());
+            PDDocument document = PDDocument.load(file);
+            logger.info("File here.");
+            PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+            if (acroForm != null) {
+                acroForm.getField("ticket_number").setValue(model.getTicketCode());
+                acroForm.getField("booking_number").setValue(model.getBookingCode() != null ? model.getBookingCode() : "-");
+                acroForm.getField("date").setValue(model.getDateOfPurchase().format(formatter));
+                acroForm.getField("document").setValue(model.getDocumentNumber());
+                acroForm.getField("name").setValue(model.getName().toUpperCase());
+                acroForm.getField("surname").setValue(model.getSurname().toUpperCase());
+                acroForm.getField("date_of_birth").setValue(model.getDateOfBirth().toString());
+                acroForm.getField("email").setValue(model.getEmail());
+                acroForm.getField("number").setValue(model.getShortName() + model.getNumber());
+                acroForm.getField("dep_short_name").setValue(model.getDepShortName());
+                acroForm.getField("arr_short_name").setValue(model.getArrShortName());
+                acroForm.getField("flight_date").setValue(model.getDate().toString());
+                acroForm.getField("dep_time").setValue(model.getDepartureTime().toString());
+                acroForm.getField("arr_time").setValue(model.getArrivalTime().toString());
+                acroForm.getField("dep_city").setValue(model.getDepCity());
+                acroForm.getField("arr_city").setValue(model.getArrCity());
+                acroForm.getField("duration").setValue("In the way: " + model.getFlightDuration().toString());
+                acroForm.getField("class").setValue(model.getFlightClass());
+                acroForm.getField("baggage").setValue(model.getBaggageType());
+                acroForm.getField("price").setValue(model.getPrice() + " RUB.");
+                acroForm.getField("total_price").setValue(model.getPrice() + " RUB.");
+                acroForm.getField("seat").setValue(model.getSeat());
+                acroForm.getField("terminal").setValue(model.getTerminal());
+            }
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            document.save(byteArrayOutputStream);
+            byte[] filledDocumentBytes = byteArrayOutputStream.toByteArray();
+            document.close();
+            return filledDocumentBytes;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
