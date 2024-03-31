@@ -27,11 +27,11 @@ public class Flight {
     @Column(name = "gate")
     private int gate;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "plane_id")
     private Plane plane;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "schedule_id")
     private Schedule schedule;
 

@@ -27,24 +27,24 @@ public class Schedule{
     private LocalTime flightDuration;
 
     @JoinColumn(name = "terminal")
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     private Terminal terminal;
 
     @JoinColumn(name = "airline_id")
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     private Airline airline;
 
     @JoinColumn(name = "departure_airport_id")
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     private Airport departureAirport;
 
 
     @JoinColumn(name = "arrival_airport_id")
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     private Airport arrivalAirport;
 
     @OneToMany(mappedBy = "schedule")
-    private List<Flight> flights= new ArrayList<Flight>();;
+    private List<Flight> flights= new ArrayList<Flight>();
 
     public Schedule() {
     }
