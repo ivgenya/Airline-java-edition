@@ -4,6 +4,7 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalTime;
 
 public class ScheduleModel {
+    private int id;
     @NotNull
     private int airlineId;
     @NotNull
@@ -14,13 +15,13 @@ public class ScheduleModel {
     private int arrivalAirportId;
 
     @NotNull
-    private LocalTime departureTime;
+    private String departureTime;
 
     @NotNull
-    private LocalTime arrivalTime;
+    private String arrivalTime;
 
     @NotNull
-    private LocalTime flightDuration;
+    private String flightDuration;
     @NotNull
     private int terminal;
 
@@ -56,27 +57,27 @@ public class ScheduleModel {
         this.arrivalAirportId = arrivalAirportId;
     }
 
-    public LocalTime getDepartureTime() {
+    public String getDepartureTime() {
         return departureTime;
     }
 
-    public void setDepartureTime(LocalTime departureTime) {
+    public void setDepartureTime(String departureTime) {
         this.departureTime = departureTime;
     }
 
-    public LocalTime getArrivalTime() {
+    public String getArrivalTime() {
         return arrivalTime;
     }
 
-    public void setArrivalTime(LocalTime arrivalTime) {
+    public void setArrivalTime(String arrivalTime) {
         this.arrivalTime = arrivalTime;
     }
 
-    public LocalTime getFlightDuration() {
+    public String getFlightDuration() {
         return flightDuration;
     }
 
-    public void setFlightDuration(LocalTime flightDuration) {
+    public void setFlightDuration(String flightDuration) {
         this.flightDuration = flightDuration;
     }
 
@@ -86,6 +87,14 @@ public class ScheduleModel {
 
     public void setTerminal(int terminal) {
         this.terminal = terminal;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }
 
