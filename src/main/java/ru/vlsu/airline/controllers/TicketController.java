@@ -9,10 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import ru.vlsu.airline.dto.BoardingPassModel;
-import ru.vlsu.airline.dto.PassengerModel;
-import ru.vlsu.airline.dto.PaymentModel;
-import ru.vlsu.airline.dto.TicketModel;
+import ru.vlsu.airline.dto.*;
 import ru.vlsu.airline.entities.Booking;
 import ru.vlsu.airline.entities.Flight_seat;
 import ru.vlsu.airline.entities.Ticket;
@@ -25,7 +22,9 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/ticket")
@@ -130,6 +129,28 @@ public class TicketController {
         return ResponseEntity.ok("Произошла ошибка при отмене бронирования");
     }
 
+    @GetMapping(value = "all-tickets", produces = "application/json")
+    public ResponseEntity<List<BoardingPassModel>> getUserTickets() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return null;
+        }
+        Object principal = auth.getPrincipal();
+        User user = (principal instanceof User) ? (User) principal : null;
+        List<BoardingPassModel> tickets = ticketService.getTicketByUserId(user);
+        return ResponseEntity.ok(tickets);
+    }
+    @GetMapping(value = "all-bookings", produces = "application/json")
+    public ResponseEntity<List<BookingModel>> getUserBookings() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return null;
+        }
+        Object principal = auth.getPrincipal();
+        User user = (principal instanceof User) ? (User) principal : null;
+        List<BookingModel> bookings = ticketService.getBookingByUserId(user);
+        return ResponseEntity.ok(bookings);
+    }
     @GetMapping(value = "seats/{flightId}", produces = "application/json")
     public ResponseEntity<List<Flight_seat>> getSeatsByFlightId(@PathVariable int flightId) {
         List<Flight_seat> seats = ticketService.getSeatsByFlightId(flightId);
@@ -146,7 +167,7 @@ public class TicketController {
         return ResponseEntity.ok(ticketDetails);
     }
 
-    @GetMapping(value = "/details/{ticketId}", produces = "application/json")
+    @GetMapping(value = "/details-by-id/{ticketId}", produces = "application/json")
     public ResponseEntity<?> getTicketDetailsById(@PathVariable int ticketId) {
         BoardingPassModel ticketDetails = ticketService.getBoardingPass(ticketId);
         if (ticketDetails == null) {
@@ -155,7 +176,7 @@ public class TicketController {
         return ResponseEntity.ok(ticketDetails);
     }
 
-    /*
+
     @GetMapping(value = "/details-by-booking/{code}", produces = "application/json")
     public ResponseEntity<?> getTicketDetailsByBooking(@PathVariable String code) {
         Booking booking = ticketService.getBookingByCode(code);
@@ -170,6 +191,4 @@ public class TicketController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Бронирование с таким кодом не существует");
     }
-
-     */
 }

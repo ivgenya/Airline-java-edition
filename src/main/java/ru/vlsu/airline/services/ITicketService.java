@@ -1,8 +1,5 @@
 package ru.vlsu.airline.services;
-import ru.vlsu.airline.dto.BoardingPassModel;
-import ru.vlsu.airline.dto.PassengerModel;
-import ru.vlsu.airline.dto.PaymentModel;
-import ru.vlsu.airline.dto.TicketModel;
+import ru.vlsu.airline.dto.*;
 import ru.vlsu.airline.entities.*;
 
 import java.io.IOException;
@@ -24,4 +21,7 @@ public interface ITicketService {
     int updateSeat(Flight_seat seat);
     List<Flight_seat> getSeatsByFlightId(int flightId);
     Ticket getTicketByCode(String code);
+    List<BoardingPassModel> getTicketByUserId(User user);
+    List<BookingModel> getBookingByUserId(User user);
+    List<Ticket> getTicketsByBookingId(int bookngId);
 }
