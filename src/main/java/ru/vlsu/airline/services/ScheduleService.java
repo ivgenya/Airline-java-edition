@@ -1,11 +1,15 @@
 package ru.vlsu.airline.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.vlsu.airline.dto.ScheduleModel;
 import ru.vlsu.airline.entities.*;
 import ru.vlsu.airline.repositories.*;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +24,7 @@ public class ScheduleService implements IScheduleService{
     private AirportRepository airportRepository;
     @Autowired
     private TerminalRepository terminalRepository;
+    private static final Logger logger = LoggerFactory.getLogger(ScheduleService.class);
 
     @Override
     public List<Schedule> getAllSchedule() {
@@ -64,6 +69,7 @@ public class ScheduleService implements IScheduleService{
     @Override
     public Schedule convertToEntity(ScheduleModel scheduleModel) {
         Schedule schedule = new Schedule();
+        schedule.setId(scheduleModel.getId());
         Optional<Airline> optionalAirline = airlineRepository.findById(scheduleModel.getAirlineId());
         if (optionalAirline.isPresent()) {
             schedule.setAirline(optionalAirline.get());
@@ -77,9 +83,18 @@ public class ScheduleService implements IScheduleService{
         if (optionalArrivalAirport.isPresent()) {
             schedule.setArrivalAirport(optionalArrivalAirport.get());
         }
-        schedule.setDepartureTime(scheduleModel.getDepartureTime());
-        schedule.setArrivalTime(scheduleModel.getArrivalTime());
-        schedule.setFlightDuration(scheduleModel.getFlightDuration());
+        String departureTimeString = scheduleModel.getDepartureTime();
+        logger.info(departureTimeString);
+        LocalTime departureTime = LocalTime.parse(departureTimeString, DateTimeFormatter.ofPattern("HH:mm:ss"));
+        schedule.setDepartureTime(departureTime);
+        String arrivalTimeString = scheduleModel.getArrivalTime();
+        logger.info(arrivalTimeString);
+        LocalTime arrivalTime = LocalTime.parse(arrivalTimeString, DateTimeFormatter.ofPattern("HH:mm:ss"));
+        schedule.setArrivalTime(arrivalTime);
+        String flightDurationString = scheduleModel.getFlightDuration();
+        logger.info(flightDurationString);
+        LocalTime flightDuration = LocalTime.parse(flightDurationString, DateTimeFormatter.ofPattern("HH:mm:ss"));
+        schedule.setFlightDuration(flightDuration);
         Optional<Terminal> optionalTerminal = terminalRepository.findById(scheduleModel.getTerminal());
         if (optionalTerminal.isPresent()) {
             schedule.setTerminal(optionalTerminal.get());
