@@ -2,18 +2,15 @@ package ru.vlsu.airline.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.vlsu.airline.dto.FlightBoardModel;
 import ru.vlsu.airline.dto.FlightModel;
-import ru.vlsu.airline.entities.Flight;
-import ru.vlsu.airline.entities.Flight_seat;
-import ru.vlsu.airline.entities.Plane;
-import ru.vlsu.airline.entities.Schedule;
-import ru.vlsu.airline.repositories.BookingRepository;
-import ru.vlsu.airline.repositories.FlightRepository;
-import ru.vlsu.airline.repositories.PlaneRepository;
-import ru.vlsu.airline.repositories.ScheduleRepository;
+import ru.vlsu.airline.dto.SeatModel;
+import ru.vlsu.airline.entities.*;
+import ru.vlsu.airline.repositories.*;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -25,9 +22,13 @@ public class FlightService implements IFlightService{
     @Autowired
     private FlightRepository flightRepository;
     @Autowired
+    private AirlineRepository airlineRepository;
+    @Autowired
     private ScheduleRepository scheduleRepository;
     @Autowired
     private PlaneRepository planeRepository;
+    @Autowired
+    private FlightSeatRepository seatRepository;
     @Override
     public List<Flight> getAllFlights() {
         return flightRepository.findAll();
@@ -43,6 +44,7 @@ public class FlightService implements IFlightService{
     }
 
     @Override
+    @Transactional
     public int addFlight(Flight flight) {
         Flight savedFlight = flightRepository.save(flight);
         return savedFlight.getId();
@@ -72,7 +74,6 @@ public class FlightService implements IFlightService{
     public List<FlightBoardModel> getFlightsByCities(String departureCity, String arrivalCity, LocalDate date) {
         List<Object[]> flightObjects = flightRepository.findByDepartureCityAndArrivalCityAndDate(departureCity, arrivalCity, date);
         List<FlightBoardModel> flightBoardModels = new ArrayList<>();
-
         for (Object[] row : flightObjects) {
             Flight flight = (Flight) row[0];
             Integer cheapestSeatPrice = (Integer) row[1];
@@ -80,12 +81,12 @@ public class FlightService implements IFlightService{
             dto.setCheapestSeatPrice(cheapestSeatPrice.toString());
             flightBoardModels.add(dto);
         }
-
         return flightBoardModels;
     }
 
 
-    private FlightBoardModel convertToDto(Flight flight) {
+    @Override
+    public FlightBoardModel convertToDto(Flight flight) {
         FlightBoardModel dto = new FlightBoardModel();
         dto.setId(String.valueOf(flight.getId()));
         dto.setStatus(flight.getStatus());
@@ -106,11 +107,13 @@ public class FlightService implements IFlightService{
     @Override
     public Flight convertToEntity(FlightModel flightModel) {
         Flight flight = new Flight();
+        flight.setId(flightModel.getId());
         Optional<Schedule> optionalSchedule = scheduleRepository.findById(flightModel.getScheduleId());
         if (optionalSchedule.isPresent()) {
             flight.setSchedule(optionalSchedule.get());
         }
-        flight.setDate(flightModel.getDate());
+        LocalDate date = LocalDate.parse(flightModel.getDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        flight.setDate(date);
         Optional<Plane> optionalPlane = planeRepository.findById(flightModel.getPlaneId());
         if (optionalPlane.isPresent()) {
             flight.setPlane(optionalPlane.get());
@@ -120,4 +123,38 @@ public class FlightService implements IFlightService{
         flight.setGate(flightModel.getGate());
         return flight;
     }
+
+    @Override
+    public List<SeatModel> getSeatsByFlightId(int flightId){
+        List<Flight_seat> seats = seatRepository.findByFlightId(flightId);
+        List<SeatModel> seatModels = new ArrayList<SeatModel>();
+        for(Flight_seat fs: seats){
+            if(fs.getStatus().equals("available")){
+                SeatModel seat = new SeatModel();
+                seat.setId(fs.getId());
+                seat.setSeatClass(fs.getPlaneSeat().getSeatClass());
+                seat.setFlightId(fs.getFlight().getId());
+                seat.setNumber(fs.getPlaneSeat().getNumber());
+                seat.setPrice(fs.getPrice());
+                seat.setStatus(fs.getStatus());
+                seatModels.add(seat);
+            }
+        }
+        return seatModels;
+    }
+    @Override
+    public Optional<Flight> findFlightByAirlineShortNameNumberAndDate(String name,  LocalDate date) {
+        String airlineCode = name.substring(0, 2);
+        String flightNumber = name.substring(2);
+        Optional<Airline> airline = airlineRepository.findByShortName(airlineCode);
+        if(airline.isPresent()){
+            Optional<Schedule> scheduleOptional = scheduleRepository.findByAirlineIdAndNumber(airline.get().getId(), Integer.parseInt(flightNumber));
+            if(scheduleOptional.isPresent()){
+                return flightRepository.findByScheduleIdAndDate(scheduleOptional.get().getId(), date);
+            }
+            return null;
+        }
+        return null;
+    }
+
 }

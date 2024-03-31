@@ -1,14 +1,16 @@
 package ru.vlsu.airline.dto;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public class FlightModel {
-
+    private int id;
     @NotNull
     private int scheduleId;
     @NotNull
-    private LocalDate date;
+    private String date;
     @NotNull
     private int planeId;
     @NotNull
@@ -26,11 +28,11 @@ public class FlightModel {
         this.scheduleId = scheduleId;
     }
 
-    public LocalDate getDate() {
+    public String getDate() {
         return date;
     }
 
-    public void setDate(LocalDate date) {
+    public void setDate(String date) {
         this.date = date;
     }
 
@@ -64,5 +66,13 @@ public class FlightModel {
 
     public void setGate(int gate) {
         this.gate = gate;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

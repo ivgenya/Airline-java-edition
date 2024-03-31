@@ -9,6 +9,9 @@ import ru.vlsu.airline.entities.Schedule;
 import ru.vlsu.airline.services.IScheduleService;
 
 import javax.validation.Valid;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -19,13 +22,39 @@ public class ScheduleController {
     private IScheduleService scheduleService;
 
     @GetMapping
-    public ResponseEntity<List<Schedule>> getAllSchedules() {
-        return ResponseEntity.ok(scheduleService.getAllSchedule());
+    public ResponseEntity<List<ScheduleModel>> getAllSchedules() {
+        List<Schedule> schedules = scheduleService.getAllSchedule();
+        List<ScheduleModel> scheduleModels = new ArrayList<ScheduleModel>();
+        for(Schedule sch: schedules){
+            scheduleModels.add(toScheduleModel(sch));
+        }
+        return ResponseEntity.ok(scheduleModels);
+    }
+
+    public static ScheduleModel toScheduleModel(Schedule schedule) {
+        ScheduleModel scheduleModel = new ScheduleModel();
+        scheduleModel.setId(schedule.getId());
+        scheduleModel.setAirlineId(schedule.getAirline().getId());
+        scheduleModel.setNumber(schedule.getNumber());
+        scheduleModel.setDepartureAirportId(schedule.getDepartureAirport().getId());
+        scheduleModel.setArrivalAirportId(schedule.getArrivalAirport().getId());
+        LocalTime departureTime = schedule.getDepartureTime();
+        String formattedDepartureTime = departureTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        scheduleModel.setDepartureTime(formattedDepartureTime);
+        LocalTime arrivalTime = schedule.getArrivalTime();
+        String formattedArrivalTime = arrivalTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        scheduleModel.setArrivalTime(formattedArrivalTime);
+        LocalTime flightDuration = schedule.getFlightDuration();
+        String formattedFlightDuration = flightDuration.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        scheduleModel.setFlightDuration(formattedFlightDuration);
+        scheduleModel.setTerminal(schedule.getTerminal().getId());
+        return scheduleModel;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Schedule> getScheduleById(@PathVariable int id) {
-        return ResponseEntity.ok(scheduleService.getScheduleById(id));
+    public ResponseEntity<ScheduleModel> getScheduleById(@PathVariable int id) {
+        Schedule schedule = scheduleService.getScheduleById(id);
+        return ResponseEntity.ok(toScheduleModel(schedule));
     }
 
     @PostMapping
@@ -41,8 +70,8 @@ public class ScheduleController {
     }
 
     @PutMapping(value = "/{id}", produces = "application/json")
-    public ResponseEntity<?> updateSchedule(@PathVariable int id, @RequestBody Schedule schedule) {
-        schedule.setId(id);
+    public ResponseEntity<?> updateSchedule(@PathVariable int id, @RequestBody ScheduleModel scheduleModel) {
+        Schedule schedule = scheduleService.convertToEntity(scheduleModel);
         int updatedScheduleId = scheduleService.updateSchedule(schedule);
         if (updatedScheduleId != -1) {
             return ResponseEntity.ok(updatedScheduleId);

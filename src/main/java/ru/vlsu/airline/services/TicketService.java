@@ -12,10 +12,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.vlsu.airline.dto.BoardingPassModel;
-import ru.vlsu.airline.dto.PassengerModel;
-import ru.vlsu.airline.dto.PaymentModel;
-import ru.vlsu.airline.dto.TicketModel;
+import ru.vlsu.airline.dto.*;
 import ru.vlsu.airline.entities.*;
 import ru.vlsu.airline.repositories.*;
 import ru.vlsu.airline.statemachine.model.TicketState;
@@ -28,6 +25,7 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -53,7 +51,40 @@ public class TicketService implements ITicketService{
     @Autowired
     private ResourceLoader resourceLoader;
 
+    @Override
+    public List<BoardingPassModel> getTicketByUserId(User user){
+        List<BoardingPassModel> ticketsModels = new ArrayList<BoardingPassModel>();
+        Optional<User> optionalUser = userRepository.findById(user.getId());
+        if (optionalUser.isPresent()) {
+            User managedUser = optionalUser.get();
+            List<Ticket> tickets = ticketRepository.findByUserId(managedUser.getId());
+            for(Ticket t: tickets){
+                ticketsModels.add(getBoardingPass(t.getId()));
+            }
+        }
+        return ticketsModels;
+    }
 
+    @Override
+    public List<BookingModel> getBookingByUserId(User user) {
+        List<BookingModel> bookingModels = new ArrayList<>();
+        List<Booking> bookings = bookingRepository.findByUser(user);
+        for (Booking booking : bookings) {
+            BookingModel bookingModel = new BookingModel();
+            bookingModel.setId(booking.getId());
+            bookingModel.setCode(booking.getCode());
+            bookingModel.setBookingDate(booking.getBookingDate());
+            bookingModel.setStatus(booking.getStatus());
+            List<Ticket> tickets = booking.getTickets();
+            List<BoardingPassModel> boardingPassModels = new ArrayList<>();
+            for (Ticket ticket : tickets) {
+                boardingPassModels.add(getBoardingPass(ticket.getId()));
+            }
+            bookingModel.setTickets(boardingPassModels);
+            bookingModels.add(bookingModel);
+        }
+        return bookingModels;
+    }
 
     @Override
     @Transactional
@@ -358,6 +389,7 @@ public class TicketService implements ITicketService{
 
     public TicketModel convertToTicketModel(Ticket ticket){
         TicketModel ticketModel = new TicketModel();
+        ticketModel.setId(ticket.getId());
         ticketModel.setCode(ticket.getCode());
         ticketModel.setPassengerId(ticket.getPassenger().getId());
         ticketModel.setFlightId(ticket.getFlight().getId());
@@ -376,5 +408,10 @@ public class TicketService implements ITicketService{
             ticketModel.setUserId(ticket.getUser().getId());
         }
         return ticketModel;
+    }
+
+    @Override
+    public List<Ticket> getTicketsByBookingId(int bookngId){
+        return ticketRepository.findByBookingId(bookngId);
     }
 }

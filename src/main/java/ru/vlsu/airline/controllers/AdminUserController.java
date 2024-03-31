@@ -6,9 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.vlsu.airline.dto.ChangeRoleDTO;
 import ru.vlsu.airline.dto.CreateUserDTO;
-import ru.vlsu.airline.dto.RoleDTO;
 import ru.vlsu.airline.dto.UserDTO;
-import ru.vlsu.airline.entities.Schedule;
 import ru.vlsu.airline.entities.User;
 import ru.vlsu.airline.repositories.RoleRepository;
 import ru.vlsu.airline.services.AdminUserService;
@@ -28,18 +26,6 @@ public class AdminUserController {
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers(){
         return ResponseEntity.ok(adminUserService.getAllUsers());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getUser(
-            @PathVariable int id
-    ){
-        return ResponseEntity.ok(adminUserService.getUser(id));
-    }
-
-    @GetMapping("/roles")
-    public ResponseEntity<List<RoleDTO>> getRoles(){
-        return ResponseEntity.ok(adminUserService.getRoles());
     }
 
     @GetMapping("/getuserrole")
@@ -63,12 +49,11 @@ public class AdminUserController {
         }
     }
 
-    @PutMapping(value = "/{id}", produces = "application/json")
+    @PostMapping("/changerole")
     public ResponseEntity<?> changeUserRole(
-            @PathVariable int id, @RequestBody UserDTO userDTO
+            @RequestBody ChangeRoleDTO userRole
     ){
-        userDTO.setId(id);
-        int updatedUser = adminUserService.changerUserRole(userDTO);
+        int updatedUser = adminUserService.changerUserRole(userRole);
         if(updatedUser != -1){
             return ResponseEntity.ok(updatedUser);
         }else{

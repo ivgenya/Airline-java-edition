@@ -1,5 +1,6 @@
 package ru.vlsu.airline.controllers;
 
+import org.hibernate.collection.internal.PersistentList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -7,12 +8,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.vlsu.airline.dto.FlightBoardModel;
 import ru.vlsu.airline.dto.FlightModel;
+import ru.vlsu.airline.dto.SeatModel;
 import ru.vlsu.airline.entities.Flight;
 import ru.vlsu.airline.services.IFlightService;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/flight")
@@ -22,17 +27,36 @@ public class FlightController {
     private IFlightService flightService;
 
     @GetMapping
-    public ResponseEntity<List<Flight>> getAllFlights() {
-        return ResponseEntity.ok(flightService.getAllFlights());
+    public ResponseEntity<List<FlightModel>> getAllFlights() {
+        List<Flight> flights = flightService.getAllFlights();
+        List<FlightModel> flightModels = new ArrayList<FlightModel>();
+        for(Flight fl: flights){
+            flightModels.add(toFlightModel(fl));
+        }
+        return ResponseEntity.ok(flightModels);
+    }
+
+    public static FlightModel toFlightModel(Flight flight) {
+        FlightModel flightModel = new FlightModel();
+        flightModel.setId(flight.getId());
+        flightModel.setScheduleId(flight.getSchedule().getId());
+        String formattedDate = flight.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        flightModel.setDate(formattedDate);
+        flightModel.setPlaneId(flight.getPlane().getId());
+        flightModel.setType(flight.getType());
+        flightModel.setStatus(flight.getStatus());
+        flightModel.setGate(flight.getGate());
+        return flightModel;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Flight> getFlightById(@PathVariable int id) {
-        return ResponseEntity.ok(flightService.getFlightById(id));
+    public ResponseEntity<FlightModel> getFlightById(@PathVariable int id) {
+        FlightModel flight = toFlightModel(flightService.getFlightById(id));
+        return ResponseEntity.ok(flight);
     }
 
     @PostMapping
-    public ResponseEntity<String> createSchedule(@Valid @RequestBody FlightModel flightModel) {
+    public ResponseEntity<String> createFlight(@Valid @RequestBody FlightModel flightModel) {
         Flight flight = flightService.convertToEntity(flightModel);
         int result = flightService.addFlight(flight);
 
@@ -44,9 +68,8 @@ public class FlightController {
     }
 
     @PutMapping(value = "/{id}", produces = "application/json")
-    public ResponseEntity<?> updateFlight(@PathVariable int id, @RequestBody Flight flight) {
-        flight.setId(id);
-        int updatedFlightId = flightService.updateFlight(flight);
+    public ResponseEntity<?> updateFlight(@PathVariable int id, @RequestBody FlightModel flight) {
+        int updatedFlightId = flightService.updateFlight(flightService.convertToEntity(flight));
         if (updatedFlightId != -1) {
             return ResponseEntity.ok(updatedFlightId);
         } else {
@@ -73,6 +96,19 @@ public class FlightController {
         return ResponseEntity.ok(flights);
     }
 
+    @GetMapping("/seats/{flightId}")
+    public ResponseEntity<List<SeatModel>> getSeats(@PathVariable int flightId) {
+        List<SeatModel> seats = flightService.getSeatsByFlightId(flightId);
+        return ResponseEntity.ok(seats);
+    }
 
+    @GetMapping("/get-by-name")
+    public ResponseEntity<?> getByAirlineNameAndDate(@RequestParam("airlineName") String airlineName, @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        Optional<Flight> flight = flightService.findFlightByAirlineShortNameNumberAndDate(airlineName, date);
+        if(flight.isPresent()){
+            return ResponseEntity.ok(flightService.convertToDto(flight.get()));
+        }
+        return new ResponseEntity<>("Рейс не найден", HttpStatus.NOT_FOUND);
+    }
 
 }
