@@ -8,6 +8,7 @@ import ru.vlsu.airline.entities.Flight;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface FlightRepository extends JpaRepository<Flight, Integer> {
@@ -26,5 +27,6 @@ public interface FlightRepository extends JpaRepository<Flight, Integer> {
             @Param("departureCity") String departureCity,
             @Param("arrivalCity") String arrivalCity,
             @Param("date") LocalDate date);
+    Optional<Flight> findByScheduleIdAndDate(int scheduleId, LocalDate date);
 
 }
