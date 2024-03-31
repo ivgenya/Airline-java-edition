@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ru.vlsu.airline.dto.ChangeRoleDTO;
 import ru.vlsu.airline.dto.CreateUserDTO;
+import ru.vlsu.airline.dto.RoleDTO;
 import ru.vlsu.airline.dto.UserDTO;
 import ru.vlsu.airline.entities.Role;
 import ru.vlsu.airline.entities.User;
@@ -37,7 +38,7 @@ public class AdminUserService implements IAdminUserService {
 
     @Override
     public List<UserDTO> getAllUsers() {
-        List<User> users = userRepository.findAll();
+        List<User> users = userRepository.findAdminDispatcher();
         return users.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -52,10 +53,11 @@ public class AdminUserService implements IAdminUserService {
     }
 
     @Override
-    public User getUser(int userId) {
+    public UserDTO getUser(int userId) {
         Optional<User> user = userRepository.findById(userId);
         if(user.isPresent()){
-            return user.get();
+            UserDTO userDTO = convertToDto(user.get());
+            return userDTO;
         }
         return null;
     }
@@ -71,12 +73,16 @@ public class AdminUserService implements IAdminUserService {
     }
 
     @Override
-    public int changerUserRole(ChangeRoleDTO userRole) {
-        User user = userRepository.findByEmail(userRole.getEmail());
-        Role newRole = roleRepository.findByRoleName(userRole.getRole());
-        user.setRole(newRole);
-        User changedUser = userRepository.save(user);
-        return changedUser.getId();
+    public int changerUserRole(UserDTO userDTO) {
+        Optional<User> user = userRepository.findById(userDTO.getId());
+        if(user.isPresent()){
+            User userToChange = user.get();
+            Role newRole = roleRepository.findByRoleName(userDTO.getRole());
+            userToChange.setRole(newRole);
+            User changedUser = userRepository.save(userToChange);
+            return changedUser.getId();
+        }
+        return -1;
     }
 
     @Override
@@ -90,8 +96,23 @@ public class AdminUserService implements IAdminUserService {
         return savedUser.getId();
     }
 
+    @Override
+    public List<RoleDTO> getRoles() {
+        List<Role> roles = roleRepository.findAll();
+        return roles.stream()
+                .map(this::convertToDtoRole)
+                .collect(Collectors.toList());
+    }
+
+    private RoleDTO convertToDtoRole(Role role){
+        RoleDTO roleDTO = new RoleDTO();
+        roleDTO.setRoleName(role.getRoleName());
+        return roleDTO;
+    }
+
     private UserDTO convertToDto(User user) {
         UserDTO userDTO = new UserDTO();
+        userDTO.setId(user.getId());
         userDTO.setEmail(user.getUsername());
         userDTO.setRole(user.getRole().getRoleName());
         return userDTO;
