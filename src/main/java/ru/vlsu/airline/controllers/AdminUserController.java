@@ -1,12 +1,17 @@
 package ru.vlsu.airline.controllers;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import ru.vlsu.airline.dto.ChangeRoleDTO;
 import ru.vlsu.airline.dto.CreateUserDTO;
 import ru.vlsu.airline.dto.UserDTO;
+import ru.vlsu.airline.entities.Role;
 import ru.vlsu.airline.entities.User;
 import ru.vlsu.airline.repositories.RoleRepository;
 import ru.vlsu.airline.services.AdminUserService;
@@ -22,18 +27,29 @@ public class AdminUserController {
 
     @Autowired
     private IAdminUserService adminUserService;
+    @Autowired
+    private JwtTokenService jwtTokenService;
 
-    @GetMapping
+    @GetMapping("/all-users")
     public ResponseEntity<List<UserDTO>> getAllUsers(){
         return ResponseEntity.ok(adminUserService.getAllUsers());
     }
 
     @GetMapping("/getuserrole")
-    public ResponseEntity<String> getUserRole(@RequestHeader("Authorization") String token){
-        if (token == null || !token.startsWith("Bearer ")) {
-            return ResponseEntity.ok("Unauthorized");
+    public ResponseEntity<String> getUserRole(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return null;
         }
-        return ResponseEntity.ok(adminUserService.getUserRole(token));
+        Object principal = auth.getPrincipal();
+        User user = (principal instanceof User) ? (User) principal : null;
+        if (user != null) {
+            Role role = user.getRole();
+            if (role != null) {
+                return ResponseEntity.ok(role.getRoleName());
+            }
+        }
+        return ResponseEntity.ok("Unauthorized");
     }
 
     @PostMapping("/add")
