@@ -16,6 +16,8 @@ import java.util.Optional;
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
     List<Booking> findByStatus(String status);
     Optional<Booking> findByCode(String code);
+    @Query("SELECT b FROM Booking b JOIN FETCH b.tickets WHERE b.id = :bookingId")
+    Optional<Booking> findByIdWithTickets(@Param("bookingId") Integer bookingId);
     @Query("SELECT DISTINCT b FROM Booking b JOIN FETCH b.tickets t WHERE t.user = :user")
     List<Booking> findByUser(@Param("user") User user);
 

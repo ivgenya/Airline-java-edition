@@ -152,9 +152,9 @@ public class FlightService implements IFlightService{
             if(scheduleOptional.isPresent()){
                 return flightRepository.findByScheduleIdAndDate(scheduleOptional.get().getId(), date);
             }
-            return null;
+            return Optional.empty();
         }
-        return null;
+        return Optional.empty();
     }
 
 }

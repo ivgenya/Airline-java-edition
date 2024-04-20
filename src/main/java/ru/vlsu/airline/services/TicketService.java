@@ -9,20 +9,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.vlsu.airline.dto.*;
 import ru.vlsu.airline.entities.*;
 import ru.vlsu.airline.repositories.*;
-import ru.vlsu.airline.statemachine.model.TicketState;
 
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -136,17 +133,39 @@ public class TicketService implements ITicketService{
     public boolean makePayment(int ticketId, PaymentModel paymentInfo) {
         Optional<Ticket> ticket = ticketRepository.findById(ticketId);
         if(ticket.isPresent()){
-            if(ticket.get().getStatus().equals("UNPAID")){
+            if(ticket.get().getStatus().equals("UNPAID") || ticket.get().getStatus().equals("BOOKED")){
                 Ticket existTicket = ticket.get();
                 existTicket.setStatus("PAID");
                 existTicket.setDateOfPurchase(LocalDateTime.now());
-                //existTicket.getBooking().setStatus("PAID"); //TODO:
                 ticketRepository.save(existTicket);
-                //bookingRepository.save(existTicket.getBooking());
+                if(existTicket.getBooking() != null){
+                    existTicket.getBooking().setStatus("PAID"); //TODO:
+                    bookingRepository.save(existTicket.getBooking());
+                }
+                return true;
             }else{
                 return false;
             }
-            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean makePaymentBooking(int bookingId, PaymentModel paymentInfo) {
+        Optional<Booking> booking = bookingRepository.findByIdWithTickets(bookingId);
+        if(booking.isPresent()){
+            if(booking.get().getStatus().equals("CONFIRMED")){
+                booking.get().setStatus("PAID");
+                List<Ticket> tickets = booking.get().getTickets();
+                for(Ticket t: tickets){
+                    t.setStatus("PAID");
+                    ticketRepository.save(t);
+                }
+                bookingRepository.save(booking.get());
+                return true;
+            }else{
+                return false;
+            }
         }
         return false;
     }
@@ -199,6 +218,15 @@ public class TicketService implements ITicketService{
     @Override
     public Booking getBookingById(Integer bookingId) {
         Optional<Booking> booking = bookingRepository.findById(bookingId);
+        if(booking.isPresent()){
+            return booking.get();
+        }
+        return null;
+    }
+
+    @Override
+    public Booking findByIdWithTickets(Integer bookingId) {
+        Optional<Booking> booking = bookingRepository.findByIdWithTickets(bookingId);
         if(booking.isPresent()){
             return booking.get();
         }

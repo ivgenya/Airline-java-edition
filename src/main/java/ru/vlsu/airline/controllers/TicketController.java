@@ -3,6 +3,7 @@ package ru.vlsu.airline.controllers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import ru.vlsu.airline.services.ITicketService;
 import ru.vlsu.airline.services.TicketService;
 
 import javax.validation.Valid;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +27,8 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @RestController
 @RequestMapping("/ticket")
@@ -51,6 +55,20 @@ public class TicketController {
         return ResponseEntity.ok(ticket);
     }
 
+    @GetMapping(value = "/get-pdf/{code}",  produces = "application/json")
+    public ResponseEntity<?> getPdfByCode(@PathVariable String code) {
+        Ticket ticket = ticketService.getTicketByCode(code);
+        if(ticket == null) {
+            return new ResponseEntity<>("Не найдено", HttpStatus.NOT_FOUND);
+        }
+        BoardingPassModel ticketExist = ticketService.getBoardingPass(ticket.getId());
+        byte[] pdfBytes = ticketService.generateTicket(ticketExist);
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=ticket.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+
     @PostMapping(value = "/book/{ticketId}", produces = "application/json")
     public ResponseEntity<?> bookTicket(@PathVariable int ticketId) {
         TicketModel ticket = ticketService.reserveTicket(ticketId);
@@ -73,6 +91,64 @@ public class TicketController {
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Произошла ошибка при оплате");
         }
+    }
+
+    @PostMapping(value = "/pay-for-booking/{bookingId}", produces = "application/zip")
+    public ResponseEntity<?> payForBooking(@PathVariable int bookingId, @RequestBody PaymentModel paymentInfo) {
+        boolean paymentResult = ticketService.makePaymentBooking(bookingId, paymentInfo);
+        if (paymentResult) {
+            Booking booking = ticketService.findByIdWithTickets(bookingId);
+            List<Ticket> tickets = booking.getTickets();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try (ZipOutputStream zipOut = new ZipOutputStream(baos)) {
+                for (int i = 0; i < tickets.size(); i++) {
+                    String fileName = "ticket" + i + ".pdf";
+                    byte[] pdfBytes = ticketService.generateTicket(ticketService.getBoardingPass(tickets.get(i).getId()));
+                    ZipEntry zipEntry = new ZipEntry(fileName);
+                    zipOut.putNextEntry(zipEntry);
+                    zipOut.write(pdfBytes);
+                    zipOut.closeEntry();
+                }
+            } catch (IOException e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при создании ZIP архива");
+            }
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", "attachment; filename=tickets.zip");
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(baos.toByteArray());
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Произошла ошибка при оплате");
+        }
+    }
+
+    @GetMapping(value = "/get-zip/{bookingId}", produces = "application/zip")
+    public ResponseEntity<?> getZip(@PathVariable int bookingId) {
+        Booking booking = ticketService.findByIdWithTickets(bookingId);
+        if(booking == null){
+            return new ResponseEntity<>("Не найдено", HttpStatus.NOT_FOUND);
+        }
+        List<Ticket> tickets = booking.getTickets();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ZipOutputStream zipOut = new ZipOutputStream(baos)) {
+            for (int i = 0; i < tickets.size(); i++) {
+                String fileName = "ticket" + i + ".pdf";
+                byte[] pdfBytes = ticketService.generateTicket(ticketService.getBoardingPass(tickets.get(i).getId()));
+                ZipEntry zipEntry = new ZipEntry(fileName);
+                zipOut.putNextEntry(zipEntry);
+                zipOut.write(pdfBytes);
+                zipOut.closeEntry();
+            }
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при создании ZIP архива");
+        }
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=tickets.zip");
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(baos.toByteArray());
     }
 
     @GetMapping(value = "/booking/{code}", produces = "application/json")

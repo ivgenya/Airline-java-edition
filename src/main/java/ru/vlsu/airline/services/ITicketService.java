@@ -9,9 +9,11 @@ public interface ITicketService {
     TicketModel buyTicket(PassengerModel passenger, int flightId, int seatId, User user);
     int updateTicket(Ticket ticket);
     boolean makePayment(int ticketId, PaymentModel paymentInfo);
+    boolean makePaymentBooking(int bookingId, PaymentModel paymentInfo);
     TicketModel reserveTicket(int ticketId);
     boolean cancelBooking(int bookingId);
     Booking getBookingById(Integer bookingId);
+    Booking findByIdWithTickets(Integer bookingId);
     Booking getBookingByCode(String code);
     int updateBooking(Booking booking);
     byte[] generateBoardingPass(BoardingPassModel model);
