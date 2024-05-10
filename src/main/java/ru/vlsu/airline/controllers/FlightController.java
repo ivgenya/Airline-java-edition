@@ -1,7 +1,8 @@
 package ru.vlsu.airline.controllers;
 
-import org.hibernate.collection.internal.PersistentList;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,16 +28,14 @@ public class FlightController {
     private IFlightService flightService;
 
     @GetMapping
-    public ResponseEntity<List<FlightModel>> getAllFlights() {
-        List<Flight> flights = flightService.getAllFlights();
-        List<FlightModel> flightModels = new ArrayList<FlightModel>();
-        for(Flight fl: flights){
-            flightModels.add(toFlightModel(fl));
-        }
+    public ResponseEntity<Page<FlightModel>> getAllFlights(@RequestParam(defaultValue = "0") int page,
+                                                           @RequestParam(defaultValue = "10") int size) {
+        Page<Flight> flightsPage = flightService.getAllFlights(PageRequest.of(page, size));
+        Page<FlightModel> flightModels = flightsPage.map(this::toFlightModel);
         return ResponseEntity.ok(flightModels);
     }
 
-    public static FlightModel toFlightModel(Flight flight) {
+    public FlightModel toFlightModel(Flight flight) {
         FlightModel flightModel = new FlightModel();
         flightModel.setId(flight.getId());
         flightModel.setScheduleId(flight.getSchedule().getId());
@@ -88,11 +87,13 @@ public class FlightController {
     }
 
     @GetMapping("/board")
-    public ResponseEntity<List<FlightBoardModel>> getFlightsBoard(
+    public ResponseEntity<Page<FlightBoardModel>> getFlightsBoard(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam String departureCity,
             @RequestParam String arrivalCity,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        List<FlightBoardModel> flights = flightService.getFlightsByCities(departureCity, arrivalCity, date);
+        Page<FlightBoardModel> flights = flightService.getFlightsByCities(departureCity, arrivalCity, date, PageRequest.of(page, size));
         return ResponseEntity.ok(flights);
     }
 

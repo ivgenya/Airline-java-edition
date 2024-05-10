@@ -3,6 +3,8 @@ package ru.vlsu.airline.services;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.vlsu.airline.dto.ScheduleModel;
 import ru.vlsu.airline.entities.*;
@@ -27,8 +29,8 @@ public class ScheduleService implements IScheduleService{
     private static final Logger logger = LoggerFactory.getLogger(ScheduleService.class);
 
     @Override
-    public List<Schedule> getAllSchedule() {
-        return scheduleRepository.findAll();
+    public Page<Schedule> getAllSchedule(Pageable pageable) {
+        return scheduleRepository.findAll(pageable);
     }
 
     @Override

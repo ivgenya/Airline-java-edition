@@ -29,7 +29,7 @@ import java.util.UUID;
 
 
 @Service
-public class TicketService implements ITicketService{
+public class TicketService implements ITicketService {
 
     private static final Logger logger = LoggerFactory.getLogger(TicketService.class);
 
@@ -49,13 +49,13 @@ public class TicketService implements ITicketService{
     private ResourceLoader resourceLoader;
 
     @Override
-    public List<BoardingPassModel> getTicketByUserId(User user){
+    public List<BoardingPassModel> getTicketByUserId(User user) {
         List<BoardingPassModel> ticketsModels = new ArrayList<BoardingPassModel>();
         Optional<User> optionalUser = userRepository.findById(user.getId());
         if (optionalUser.isPresent()) {
             User managedUser = optionalUser.get();
             List<Ticket> tickets = ticketRepository.findByUserId(managedUser.getId());
-            for(Ticket t: tickets){
+            for (Ticket t : tickets) {
                 ticketsModels.add(getBoardingPass(t.getId()));
             }
         }
@@ -92,7 +92,7 @@ public class TicketService implements ITicketService{
             Flight existFlight = flight.get();
             logger.info(existFlight.getStatus());
             Optional<Flight_seat> seat = seatRepository.findById(seatId);
-            if(seat.isPresent() && seat.get().getStatus().equals("available")){
+            if (seat.isPresent() && seat.get().getStatus().equals("available")) {
                 Optional<User> optionalUser = userRepository.findById(user.getId());
                 if (optionalUser.isPresent()) {
                     User managedUser = optionalUser.get();
@@ -132,18 +132,18 @@ public class TicketService implements ITicketService{
     @Override
     public boolean makePayment(int ticketId, PaymentModel paymentInfo) {
         Optional<Ticket> ticket = ticketRepository.findById(ticketId);
-        if(ticket.isPresent()){
-            if(ticket.get().getStatus().equals("UNPAID") || ticket.get().getStatus().equals("BOOKED")){
+        if (ticket.isPresent()) {
+            if (ticket.get().getStatus().equals("UNPAID") || ticket.get().getStatus().equals("BOOKED")) {
                 Ticket existTicket = ticket.get();
                 existTicket.setStatus("PAID");
                 existTicket.setDateOfPurchase(LocalDateTime.now());
                 ticketRepository.save(existTicket);
-                if(existTicket.getBooking() != null){
+                if (existTicket.getBooking() != null) {
                     existTicket.getBooking().setStatus("PAID"); //TODO:
                     bookingRepository.save(existTicket.getBooking());
                 }
                 return true;
-            }else{
+            } else {
                 return false;
             }
         }
@@ -153,17 +153,17 @@ public class TicketService implements ITicketService{
     @Override
     public boolean makePaymentBooking(int bookingId, PaymentModel paymentInfo) {
         Optional<Booking> booking = bookingRepository.findByIdWithTickets(bookingId);
-        if(booking.isPresent()){
-            if(booking.get().getStatus().equals("CONFIRMED")){
+        if (booking.isPresent()) {
+            if (booking.get().getStatus().equals("CONFIRMED")) {
                 booking.get().setStatus("PAID");
                 List<Ticket> tickets = booking.get().getTickets();
-                for(Ticket t: tickets){
+                for (Ticket t : tickets) {
                     t.setStatus("PAID");
                     ticketRepository.save(t);
                 }
                 bookingRepository.save(booking.get());
                 return true;
-            }else{
+            } else {
                 return false;
             }
         }
@@ -175,9 +175,9 @@ public class TicketService implements ITicketService{
     @Transactional
     public TicketModel reserveTicket(int ticketId) {
         Optional<Ticket> ticket = ticketRepository.findById(ticketId);
-        if(ticket.isPresent()){
+        if (ticket.isPresent()) {
             Ticket existTicket = ticket.get();
-            if(existTicket.getStatus().equals("UNPAID")){
+            if (existTicket.getStatus().equals("UNPAID")) {
                 Booking booking = new Booking();
                 booking.setBookingDate(LocalDateTime.now());
                 booking.setCode(UUID.randomUUID().toString());
@@ -198,11 +198,11 @@ public class TicketService implements ITicketService{
     @Transactional
     public boolean cancelBooking(int bookingId) {
         Optional<Booking> booking = bookingRepository.findById(bookingId);
-        if(booking.isPresent()){
+        if (booking.isPresent()) {
             Booking existBooking = booking.get();
             existBooking.setStatus("CANCELLED");
             List<Ticket> tickets = existBooking.getTickets();
-            for(Ticket ticket: tickets){
+            for (Ticket ticket : tickets) {
                 ticket.setStatus("CANCELLED");
                 Flight_seat seat = ticket.getSeat();
                 seat.setStatus("available");
@@ -218,7 +218,7 @@ public class TicketService implements ITicketService{
     @Override
     public Booking getBookingById(Integer bookingId) {
         Optional<Booking> booking = bookingRepository.findById(bookingId);
-        if(booking.isPresent()){
+        if (booking.isPresent()) {
             return booking.get();
         }
         return null;
@@ -227,7 +227,7 @@ public class TicketService implements ITicketService{
     @Override
     public Booking findByIdWithTickets(Integer bookingId) {
         Optional<Booking> booking = bookingRepository.findByIdWithTickets(bookingId);
-        if(booking.isPresent()){
+        if (booking.isPresent()) {
             return booking.get();
         }
         return null;
@@ -236,7 +236,7 @@ public class TicketService implements ITicketService{
     @Override
     public Booking getBookingByCode(String code) {
         Optional<Booking> booking = bookingRepository.findByCode(code);
-        if(booking.isPresent()){
+        if (booking.isPresent()) {
             return booking.get();
         }
         return null;
@@ -255,9 +255,8 @@ public class TicketService implements ITicketService{
     @Override
     public byte[] generateBoardingPass(BoardingPassModel model) {
         try {
-        try(ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            InputStream templateStream = new ClassPathResource("pdf/template_bp.pdf").getInputStream())
-            {
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                 InputStream templateStream = new ClassPathResource("pdf/template_bp.pdf").getInputStream()) {
                 PDDocument pdfDocument = PDDocument.load(templateStream);
                 PDDocumentCatalog docCatalog = pdfDocument.getDocumentCatalog();
                 PDAcroForm form = docCatalog.getAcroForm();
@@ -296,10 +295,7 @@ public class TicketService implements ITicketService{
                 return null;
             }
             File file = resource.getFile();
-            logger.info(resource.toString());
-            logger.info(file.toString());
             PDDocument document = PDDocument.load(file);
-            logger.info("File here.");
             PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
             if (acroForm != null) {
@@ -326,12 +322,12 @@ public class TicketService implements ITicketService{
                 acroForm.getField("total_price").setValue(model.getPrice() + " RUB.");
                 acroForm.getField("seat").setValue(model.getSeat());
                 acroForm.getField("terminal").setValue(model.getTerminal());
+                acroForm.flatten();
             }
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             document.save(byteArrayOutputStream);
-            byte[] filledDocumentBytes = byteArrayOutputStream.toByteArray();
             document.close();
-            return filledDocumentBytes;
+            return byteArrayOutputStream.toByteArray();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -384,7 +380,7 @@ public class TicketService implements ITicketService{
     @Override
     public Flight_seat getSeatById(int seatId) {
         Optional<Flight_seat> seat = seatRepository.findById(seatId);
-        if(seat.isPresent()){
+        if (seat.isPresent()) {
             return seat.get();
         }
         return null;
@@ -409,13 +405,13 @@ public class TicketService implements ITicketService{
     @Override
     public Ticket getTicketByCode(String code) {
         Optional<Ticket> ticket = ticketRepository.findByCode(code);
-        if(ticket.isPresent()){
+        if (ticket.isPresent()) {
             return ticket.get();
         }
         return null;
     }
 
-    public TicketModel convertToTicketModel(Ticket ticket){
+    public TicketModel convertToTicketModel(Ticket ticket) {
         TicketModel ticketModel = new TicketModel();
         ticketModel.setId(ticket.getId());
         ticketModel.setCode(ticket.getCode());
@@ -423,23 +419,23 @@ public class TicketService implements ITicketService{
         ticketModel.setFlightId(ticket.getFlight().getId());
         ticketModel.setSeatId(ticket.getSeat().getId());
         ticketModel.setDateOfPurchase(ticket.getDateOfPurchase());
-        if(ticket.getBooking() == null){
+        if (ticket.getBooking() == null) {
             ticketModel.setBookingId(null);
-        }else{
+        } else {
             ticketModel.setBookingId(ticket.getBooking().getId());
         }
         ticketModel.setStatus(ticket.getStatus());
         ticketModel.setBaggageType(ticket.getBaggageType());
-        if(ticket.getUser() == null){
+        if (ticket.getUser() == null) {
             ticketModel.setUserId(null);
-        }else{
+        } else {
             ticketModel.setUserId(ticket.getUser().getId());
         }
         return ticketModel;
     }
 
     @Override
-    public List<Ticket> getTicketsByBookingId(int bookngId){
+    public List<Ticket> getTicketsByBookingId(int bookngId) {
         return ticketRepository.findByBookingId(bookngId);
     }
 }

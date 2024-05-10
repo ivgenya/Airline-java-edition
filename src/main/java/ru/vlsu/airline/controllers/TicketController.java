@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import ru.vlsu.airline.dto.*;
 import ru.vlsu.airline.entities.Booking;
@@ -16,7 +17,6 @@ import ru.vlsu.airline.entities.Flight_seat;
 import ru.vlsu.airline.entities.Ticket;
 import ru.vlsu.airline.entities.User;
 import ru.vlsu.airline.services.ITicketService;
-import ru.vlsu.airline.services.TicketService;
 
 import javax.validation.Valid;
 import java.io.ByteArrayOutputStream;
@@ -26,7 +26,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -38,6 +37,7 @@ public class TicketController {
     private ITicketService ticketService;
 
     @PostMapping(value = "/buy",  produces = "application/json")
+    @Transactional
     public ResponseEntity<?> buyTicket(@Valid @RequestBody PassengerModel passengerModel,
                                             @RequestParam int flightId,
                                             @RequestParam int seatId) {
@@ -56,6 +56,7 @@ public class TicketController {
     }
 
     @GetMapping(value = "/get-pdf/{code}",  produces = "application/json")
+    @Transactional
     public ResponseEntity<?> getPdfByCode(@PathVariable String code) {
         Ticket ticket = ticketService.getTicketByCode(code);
         if(ticket == null) {
@@ -70,6 +71,7 @@ public class TicketController {
     }
 
     @PostMapping(value = "/book/{ticketId}", produces = "application/json")
+    @Transactional
     public ResponseEntity<?> bookTicket(@PathVariable int ticketId) {
         TicketModel ticket = ticketService.reserveTicket(ticketId);
         if (ticket == null) {
@@ -79,6 +81,7 @@ public class TicketController {
     }
 
     @PostMapping(value = "/pay/{ticketId}", produces = "application/json")
+    @Transactional
     public ResponseEntity<?> payForTicket(@PathVariable int ticketId, @RequestBody PaymentModel paymentInfo) {
         boolean paymentResult = ticketService.makePayment(ticketId, paymentInfo);
         if (paymentResult) {
@@ -94,6 +97,7 @@ public class TicketController {
     }
 
     @PostMapping(value = "/pay-for-booking/{bookingId}", produces = "application/zip")
+    @Transactional
     public ResponseEntity<?> payForBooking(@PathVariable int bookingId, @RequestBody PaymentModel paymentInfo) {
         boolean paymentResult = ticketService.makePaymentBooking(bookingId, paymentInfo);
         if (paymentResult) {
@@ -124,6 +128,7 @@ public class TicketController {
     }
 
     @GetMapping(value = "/get-zip/{bookingId}", produces = "application/zip")
+    @Transactional
     public ResponseEntity<?> getZip(@PathVariable int bookingId) {
         Booking booking = ticketService.findByIdWithTickets(bookingId);
         if(booking == null){
@@ -152,6 +157,7 @@ public class TicketController {
     }
 
     @GetMapping(value = "/booking/{code}", produces = "application/json")
+    @Transactional
     public ResponseEntity<?> getBookingByCode(@PathVariable String code) {
         Booking booking = ticketService.getBookingByCode(code);
         if (booking != null) {
@@ -163,6 +169,7 @@ public class TicketController {
     }
 
     @PostMapping(value = "/register", produces = "application/json")
+    @Transactional
     public ResponseEntity<?> registerForFlight(@RequestParam String ticketCode) {
         Ticket ticket = ticketService.getTicketByCode(ticketCode);
         if(ticket == null){
@@ -197,6 +204,7 @@ public class TicketController {
 
 
     @PostMapping(value = "/cancel/{bookingId}", produces = "application/json")
+    @Transactional
     public ResponseEntity<String> cancelBooking(@PathVariable int bookingId) {
         boolean bookingCancelled = ticketService.cancelBooking(bookingId);
         if(bookingCancelled){
@@ -206,6 +214,7 @@ public class TicketController {
     }
 
     @GetMapping(value = "all-tickets", produces = "application/json")
+    @Transactional
     public ResponseEntity<List<BoardingPassModel>> getUserTickets() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
@@ -217,6 +226,7 @@ public class TicketController {
         return ResponseEntity.ok(tickets);
     }
     @GetMapping(value = "all-bookings", produces = "application/json")
+    @Transactional
     public ResponseEntity<List<BookingModel>> getUserBookings() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
@@ -228,12 +238,14 @@ public class TicketController {
         return ResponseEntity.ok(bookings);
     }
     @GetMapping(value = "seats/{flightId}", produces = "application/json")
+    @Transactional
     public ResponseEntity<List<Flight_seat>> getSeatsByFlightId(@PathVariable int flightId) {
         List<Flight_seat> seats = ticketService.getSeatsByFlightId(flightId);
         return ResponseEntity.ok(seats);
     }
 
     @GetMapping(value = "/details-by-code/{ticketCode}", produces = "application/json")
+    @Transactional
     public ResponseEntity<?> getTicketDetails(@PathVariable String ticketCode) {
         Ticket ticket = ticketService.getTicketByCode(ticketCode);
         if (ticket == null) {
@@ -244,6 +256,7 @@ public class TicketController {
     }
 
     @GetMapping(value = "/details-by-id/{ticketId}", produces = "application/json")
+    @Transactional
     public ResponseEntity<?> getTicketDetailsById(@PathVariable int ticketId) {
         BoardingPassModel ticketDetails = ticketService.getBoardingPass(ticketId);
         if (ticketDetails == null) {
@@ -254,6 +267,7 @@ public class TicketController {
 
 
     @GetMapping(value = "/details-by-booking/{code}", produces = "application/json")
+    @Transactional
     public ResponseEntity<?> getTicketDetailsByBooking(@PathVariable String code) {
         Booking booking = ticketService.getBookingByCode(code);
         if (booking != null) {

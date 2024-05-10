@@ -1,6 +1,8 @@
 package ru.vlsu.airline.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,16 +24,14 @@ public class ScheduleController {
     private IScheduleService scheduleService;
 
     @GetMapping
-    public ResponseEntity<List<ScheduleModel>> getAllSchedules() {
-        List<Schedule> schedules = scheduleService.getAllSchedule();
-        List<ScheduleModel> scheduleModels = new ArrayList<ScheduleModel>();
-        for(Schedule sch: schedules){
-            scheduleModels.add(toScheduleModel(sch));
-        }
+    public ResponseEntity<Page<ScheduleModel>> getAllSchedules(@RequestParam(defaultValue = "0") int page,
+                                                           @RequestParam(defaultValue = "10") int size) {
+        Page<Schedule> schedulePage = scheduleService.getAllSchedule(PageRequest.of(page, size));
+        Page<ScheduleModel> scheduleModels = schedulePage.map(this::toScheduleModel);
         return ResponseEntity.ok(scheduleModels);
     }
 
-    public static ScheduleModel toScheduleModel(Schedule schedule) {
+    public ScheduleModel toScheduleModel(Schedule schedule) {
         ScheduleModel scheduleModel = new ScheduleModel();
         scheduleModel.setId(schedule.getId());
         scheduleModel.setAirlineId(schedule.getAirline().getId());

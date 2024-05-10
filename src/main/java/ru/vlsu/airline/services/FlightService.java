@@ -1,8 +1,14 @@
 package ru.vlsu.airline.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.vlsu.airline.controllers.TicketController;
 import ru.vlsu.airline.dto.FlightBoardModel;
 import ru.vlsu.airline.dto.FlightModel;
 import ru.vlsu.airline.dto.SeatModel;
@@ -10,6 +16,8 @@ import ru.vlsu.airline.entities.*;
 import ru.vlsu.airline.repositories.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,6 +26,7 @@ import java.util.Optional;
 
 @Service
 public class FlightService implements IFlightService{
+    private static final Logger logger = LoggerFactory.getLogger(TicketController.class);
 
     @Autowired
     private FlightRepository flightRepository;
@@ -30,8 +39,8 @@ public class FlightService implements IFlightService{
     @Autowired
     private FlightSeatRepository seatRepository;
     @Override
-    public List<Flight> getAllFlights() {
-        return flightRepository.findAll();
+    public Page<Flight> getAllFlights(Pageable pageable) {
+        return flightRepository.findAll(pageable);
     }
 
     @Override
@@ -71,17 +80,28 @@ public class FlightService implements IFlightService{
     }
 
     @Override
-    public List<FlightBoardModel> getFlightsByCities(String departureCity, String arrivalCity, LocalDate date) {
-        List<Object[]> flightObjects = flightRepository.findByDepartureCityAndArrivalCityAndDate(departureCity, arrivalCity, date);
+    public Page<FlightBoardModel> getFlightsByCities(String departureCity, String arrivalCity, LocalDate date, Pageable pageable) {
+        Page<Object[]> flightObjects = flightRepository.findByDepartureCityAndArrivalCityAndDate(departureCity, arrivalCity, date, pageable);
+        List<Object[]> totalFlightObjects = flightRepository.findByDepartureCityAndArrivalCityAndDate(departureCity, arrivalCity, date);
+        int totalElements = totalFlightObjects.size();
+        logger.info(String.valueOf(totalElements));
+        logger.info(String.valueOf(pageable.getPageSize()));
+        logger.info(String.valueOf((double)totalElements));
+        logger.info(String.valueOf((double)pageable.getPageSize()));
+        int totalPages = (int) Math.ceil((double) totalElements / (double) pageable.getPageSize());
+        logger.info(String.valueOf(totalPages));
         List<FlightBoardModel> flightBoardModels = new ArrayList<>();
         for (Object[] row : flightObjects) {
             Flight flight = (Flight) row[0];
-            Integer cheapestSeatPrice = (Integer) row[1];
-            FlightBoardModel dto = convertToDto(flight);
-            dto.setCheapestSeatPrice(cheapestSeatPrice.toString());
-            flightBoardModels.add(dto);
+            LocalDate departureDate = flight.getDate();
+            if (departureDate.isAfter(LocalDate.now())) {
+                Integer cheapestSeatPrice = (Integer) row[1];
+                FlightBoardModel dto = convertToDto(flight);
+                dto.setCheapestSeatPrice(cheapestSeatPrice.toString());
+                flightBoardModels.add(dto);
+            }
         }
-        return flightBoardModels;
+        return new PageImpl<>(flightBoardModels, pageable, totalElements);
     }
 
 

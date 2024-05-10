@@ -1,5 +1,7 @@
 package ru.vlsu.airline.repositories;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +14,22 @@ import java.util.Optional;
 
 @Repository
 public interface FlightRepository extends JpaRepository<Flight, Integer> {
+
+    @Query("SELECT f, MIN(seat.price) FROM Flight f " +
+            "JOIN f.schedule s " +
+            "JOIN s.departureAirport da " +
+            "JOIN s.arrivalAirport aa " +
+            "JOIN f.seats seat " +
+            "WHERE da.city = :departureCity " +
+            "AND aa.city = :arrivalCity " +
+            "AND seat.status = 'available' " +
+            "AND f.date = :date " +
+            "GROUP BY f.id")
+    Page<Object[]> findByDepartureCityAndArrivalCityAndDate(
+            @Param("departureCity") String departureCity,
+            @Param("arrivalCity") String arrivalCity,
+            @Param("date") LocalDate date,
+            Pageable pageable);
 
     @Query("SELECT f, MIN(seat.price) FROM Flight f " +
             "JOIN f.schedule s " +
