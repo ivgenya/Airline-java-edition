@@ -1,5 +1,7 @@
 package ru.vlsu.airline.controllers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.vlsu.airline.dto.*;
 import ru.vlsu.airline.entities.Flight;
+import ru.vlsu.airline.repositories.FlightCriteriaRepository;
 import ru.vlsu.airline.services.IFlightService;
 
 import javax.validation.Valid;
@@ -23,6 +26,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/flight")
 public class FlightController {
+
+    private static final Logger logger = LoggerFactory.getLogger(FlightController.class);
 
     @Autowired
     private IFlightService flightService;
@@ -50,7 +55,9 @@ public class FlightController {
         FlightSearchCriteria flightSearchCriteria = new FlightSearchCriteria();
         flightSearchCriteria.setArrivalAirport("Zvartnots");
         flightSearchCriteria.setDepartureAirport("Sheremetyevo");
-        return new ResponseEntity<>(flightService.getFlights(flightPage, flightSearchCriteria), HttpStatus.OK);
+        Page<Flight> fligtPage = flightService.getFlights(flightPage, flightSearchCriteria);
+        logger.info(fligtPage.toString());
+        return ResponseEntity.ok(fligtPage);
     }
 
     public FlightModel toFlightModel(Flight flight) {

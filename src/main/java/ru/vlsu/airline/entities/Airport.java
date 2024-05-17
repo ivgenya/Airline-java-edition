@@ -29,9 +29,11 @@ public class Airport {
     private String country;
 
     @OneToMany(mappedBy = "arrivalAirport")
+    @JsonIgnore
     private List<Schedule> scheduleArrivalAirports = new ArrayList<Schedule>();
 
     @OneToMany(mappedBy = "departureAirport")
+    @JsonIgnore
     private List<Schedule> scheduleDepartureAirports = new ArrayList<Schedule>();
 
     @OneToMany(mappedBy = "airport")
