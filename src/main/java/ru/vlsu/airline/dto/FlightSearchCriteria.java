@@ -2,16 +2,25 @@ package ru.vlsu.airline.dto;
 
 public class FlightSearchCriteria {
 
-    private String planeName;
+    private String arrivalAirport;
+    private String departureAirport;
 
     private String date;
 
-    public String getPlaneName() {
-        return planeName;
+    public String getArrivalAirport() {
+        return arrivalAirport;
     }
 
-    public void setPlaneName(String planeName) {
-        this.planeName = planeName;
+    public void setArrivalAirport(String arrivalAirport) {
+        this.arrivalAirport = arrivalAirport;
+    }
+
+    public String getDepartureAirport() {
+        return departureAirport;
+    }
+
+    public void setDepartureAirport(String departureAirport) {
+        this.departureAirport = departureAirport;
     }
 
     public String getDate() {

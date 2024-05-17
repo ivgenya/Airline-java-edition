@@ -28,7 +28,6 @@ public class FlightService implements IFlightService{
 
     @Autowired
     private FlightRepository flightRepository;
-
     @Autowired
     private FlightCriteriaRepository flightCriteriaRepository;
     @Autowired
@@ -49,6 +48,7 @@ public class FlightService implements IFlightService{
 //
 //    }
 
+    @Override
     public Page<Flight> getFlights(FlightPage flightPage,
                                    FlightSearchCriteria flightSearchCriteria){
         return flightCriteriaRepository.findAllFlightsWithFilters(flightPage, flightSearchCriteria);
