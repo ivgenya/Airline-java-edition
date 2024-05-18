@@ -8,11 +8,17 @@ import java.time.LocalDate;
 public class FlightModel {
     private int id;
     @NotNull
-    private int scheduleId;
+    private int scheduleNumber;
     @NotNull
     private String date;
+//    @NotNull
+//    private int planeId;
     @NotNull
-    private int planeId;
+    private String planeName;
+    @NotNull
+    private String arrivalAirport;
+    @NotNull
+    private String departureAirport;
     @NotNull
     private String type;
     @NotNull
@@ -20,12 +26,36 @@ public class FlightModel {
     @NotNull
     private int gate;
 
-    public int getScheduleId() {
-        return scheduleId;
+    public String getPlaneName() {
+        return planeName;
     }
 
-    public void setScheduleId(int scheduleId) {
-        this.scheduleId = scheduleId;
+    public void setPlaneName(String planeName) {
+        this.planeName = planeName;
+    }
+
+    public String getArrivalAirport() {
+        return arrivalAirport;
+    }
+
+    public void setArrivalAirport(String arrivalAirport) {
+        this.arrivalAirport = arrivalAirport;
+    }
+
+    public String getDepartureAirport() {
+        return departureAirport;
+    }
+
+    public void setDepartureAirport(String departureAirport) {
+        this.departureAirport = departureAirport;
+    }
+
+    public int getScheduleNumber() {
+        return scheduleNumber;
+    }
+
+    public void setScheduleNumber(int scheduleNumber) {
+        this.scheduleNumber = scheduleNumber;
     }
 
     public String getDate() {
@@ -35,14 +65,14 @@ public class FlightModel {
     public void setDate(String date) {
         this.date = date;
     }
-
-    public int getPlaneId() {
-        return planeId;
-    }
-
-    public void setPlaneId(int planeId) {
-        this.planeId = planeId;
-    }
+//
+//    public int getPlaneId() {
+//        return planeId;
+//    }
+//
+//    public void setPlaneId(int planeId) {
+//        this.planeId = planeId;
+//    }
 
     public String getType() {
         return type;

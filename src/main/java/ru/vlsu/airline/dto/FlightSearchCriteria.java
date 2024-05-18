@@ -5,7 +5,7 @@ public class FlightSearchCriteria {
     private String arrivalAirport;
     private String departureAirport;
 
-    private String date;
+    private String scheduleNumber;
 
     public String getArrivalAirport() {
         return arrivalAirport;
@@ -23,11 +23,11 @@ public class FlightSearchCriteria {
         this.departureAirport = departureAirport;
     }
 
-    public String getDate() {
-        return date;
+    public String getScheduleNumber() {
+        return scheduleNumber;
     }
 
-    public void setDate(String date) {
-        this.date = date;
+    public void setScheduleNumber(String scheduleNumber) {
+        this.scheduleNumber = scheduleNumber;
     }
 }

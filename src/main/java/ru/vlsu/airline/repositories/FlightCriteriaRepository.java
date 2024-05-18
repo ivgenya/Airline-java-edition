@@ -36,21 +36,15 @@ public class FlightCriteriaRepository {
                                                   FlightSearchCriteria flightSearchCriteria){
         CriteriaQuery<Flight> criteriaQuery = criteriaBuilder.createQuery(Flight.class);
         Root<Flight> flightRoot = criteriaQuery.from(Flight.class);
-        Predicate predicate = getPredicate(flightSearchCriteria, flightRoot);
-        criteriaQuery.where(predicate);
+        if(flightSearchCriteria.getArrivalAirport() != null && flightSearchCriteria.getDepartureAirport() != null && flightSearchCriteria.getScheduleNumber() != null){
+            Predicate predicate = getPredicate(flightSearchCriteria, flightRoot);
+            criteriaQuery.where(predicate);
+        }
         setOrder(flightPage,criteriaQuery, flightRoot);
         TypedQuery<Flight> typedQuery = entityManager.createQuery(criteriaQuery);
         typedQuery.setFirstResult(flightPage.getPage() * flightPage.getPageSize());
         typedQuery.setMaxResults(flightPage.getPageSize());
         Pageable pageable = getPageble(flightPage);
-
-        List<Flight> resultList = typedQuery.getResultList();
-
-        // Логируем каждый элемент из resultSet
-        for (Flight flight : resultList) {
-            logger.info("Flight found: {}", flight.getId());
-        }
-
 
         return new PageImpl<>(typedQuery.getResultList(), pageable, typedQuery.getResultList().size());
     }
@@ -75,19 +69,17 @@ public class FlightCriteriaRepository {
         Join<Flight, Airport> airportDJoin = scheduleJoin.join("departureAirport");
         if(Objects.nonNull(flightSearchCriteria.getArrivalAirport())){
             predicates.add(
-//                    criteriaBuilder.equal(flightRoot.join("schedule").join("arrivalAirport").get("name"), flightSearchCriteria.getArrivalAirport())
                     criteriaBuilder.equal(airportAJoin.get("name"), flightSearchCriteria.getArrivalAirport())
             );
         }
         if(Objects.nonNull(flightSearchCriteria.getDepartureAirport())){
             predicates.add(
-//                    criteriaBuilder.equal(flightRoot.join("schedule").join("departureAirport").get("name"), flightSearchCriteria.getDepartureAirport())
                     criteriaBuilder.equal(airportDJoin.get("name"), flightSearchCriteria.getDepartureAirport())
             );
         }
-        if(Objects.nonNull(flightSearchCriteria.getDate())){
+        if(Objects.nonNull(flightSearchCriteria.getScheduleNumber())){
             predicates.add(
-                    criteriaBuilder.equal(flightRoot.get("date"), flightSearchCriteria.getDate())
+                    criteriaBuilder.equal(scheduleJoin.get("number"), flightSearchCriteria.getScheduleNumber())
             );
         }
 

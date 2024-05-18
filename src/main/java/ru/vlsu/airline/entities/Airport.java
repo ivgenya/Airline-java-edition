@@ -83,21 +83,21 @@ public class Airport {
         this.country = country;
     }
 
-    public List<Schedule> getScheduleArrivalAirports() {
-        return scheduleArrivalAirports;
-    }
-
-    public void setScheduleArrivalAirports(List<Schedule> scheduleArrivalAirports) {
-        this.scheduleArrivalAirports = scheduleArrivalAirports;
-    }
-
-    public List<Schedule> getScheduleDepartureAirports() {
-        return scheduleDepartureAirports;
-    }
-
-    public void setScheduleDepartureAirports(List<Schedule> scheduleDepartureAirports) {
-        this.scheduleDepartureAirports = scheduleDepartureAirports;
-    }
+//    public List<Schedule> getScheduleArrivalAirports() {
+//        return scheduleArrivalAirports;
+//    }
+//
+//    public void setScheduleArrivalAirports(List<Schedule> scheduleArrivalAirports) {
+//        this.scheduleArrivalAirports = scheduleArrivalAirports;
+//    }
+//
+//    public List<Schedule> getScheduleDepartureAirports() {
+//        return scheduleDepartureAirports;
+//    }
+//
+//    public void setScheduleDepartureAirports(List<Schedule> scheduleDepartureAirports) {
+//        this.scheduleDepartureAirports = scheduleDepartureAirports;
+//    }
 
     public List<Terminal> getTerminalAirports() {
         return terminalAirports;
