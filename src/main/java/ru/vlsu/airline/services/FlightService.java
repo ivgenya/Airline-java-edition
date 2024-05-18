@@ -9,9 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.vlsu.airline.controllers.TicketController;
-import ru.vlsu.airline.dto.FlightBoardModel;
-import ru.vlsu.airline.dto.FlightModel;
-import ru.vlsu.airline.dto.SeatModel;
+import ru.vlsu.airline.dto.*;
 import ru.vlsu.airline.entities.*;
 import ru.vlsu.airline.repositories.*;
 
@@ -31,6 +29,8 @@ public class FlightService implements IFlightService{
     @Autowired
     private FlightRepository flightRepository;
     @Autowired
+    private FlightCriteriaRepository flightCriteriaRepository;
+    @Autowired
     private AirlineRepository airlineRepository;
     @Autowired
     private ScheduleRepository scheduleRepository;
@@ -38,9 +38,12 @@ public class FlightService implements IFlightService{
     private PlaneRepository planeRepository;
     @Autowired
     private FlightSeatRepository seatRepository;
+
+
     @Override
-    public Page<Flight> getAllFlights(Pageable pageable) {
-        return flightRepository.findAll(pageable);
+    public Page<Flight> getFlights(FlightPage flightPage,
+                                   FlightSearchCriteria flightSearchCriteria){
+        return flightCriteriaRepository.findAllFlightsWithFilters(flightPage, flightSearchCriteria);
     }
 
     @Override
@@ -128,14 +131,14 @@ public class FlightService implements IFlightService{
     public Flight convertToEntity(FlightModel flightModel) {
         Flight flight = new Flight();
         flight.setId(flightModel.getId());
-        Optional<Schedule> optionalSchedule = scheduleRepository.findById(flightModel.getScheduleId());
-        if (optionalSchedule.isPresent()) {
+        Optional<Schedule> optionalSchedule = scheduleRepository.findByNumber(flightModel.getScheduleNumber());
+        if(optionalSchedule.isPresent()){
             flight.setSchedule(optionalSchedule.get());
         }
         LocalDate date = LocalDate.parse(flightModel.getDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         flight.setDate(date);
-        Optional<Plane> optionalPlane = planeRepository.findById(flightModel.getPlaneId());
-        if (optionalPlane.isPresent()) {
+        Optional<Plane> optionalPlane = planeRepository.findByPlaneName(flightModel.getPlaneName());
+        if(optionalPlane.isPresent()){
             flight.setPlane(optionalPlane.get());
         }
         flight.setType(flightModel.getType());

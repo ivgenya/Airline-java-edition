@@ -2,9 +2,7 @@ package ru.vlsu.airline.services;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import ru.vlsu.airline.dto.FlightBoardModel;
-import ru.vlsu.airline.dto.FlightModel;
-import ru.vlsu.airline.dto.SeatModel;
+import ru.vlsu.airline.dto.*;
 import ru.vlsu.airline.entities.Flight;
 
 import java.time.LocalDate;
@@ -13,7 +11,6 @@ import java.util.Optional;
 
 
 public interface IFlightService {
-    Page<Flight> getAllFlights(Pageable pageable);
     Flight getFlightById(int flightId);
     int addFlight(Flight flight);
     int updateFlight(Flight flight);
@@ -23,4 +20,5 @@ public interface IFlightService {
     List<SeatModel> getSeatsByFlightId(int flightId);
     Optional<Flight> findFlightByAirlineShortNameNumberAndDate(String name, LocalDate date);
     FlightBoardModel convertToDto(Flight flight);
+    Page<Flight> getFlights(FlightPage flightPage, FlightSearchCriteria flightSearchCriteria);
 }

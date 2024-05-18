@@ -1,5 +1,7 @@
 package ru.vlsu.airline.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -115,13 +117,13 @@ public class Schedule{
     }
 
 
-    public List<Flight> getFlights() {
-        return flights;
-    }
-
-    public void setFlights(List<Flight> flights) {
-        this.flights = flights;
-    }
+//    public List<Flight> getFlights() {
+//        return flights;
+//    }
+//
+//    public void setFlights(List<Flight> flights) {
+//        this.flights = flights;
+//    }
 
 
     public Terminal getTerminal() {

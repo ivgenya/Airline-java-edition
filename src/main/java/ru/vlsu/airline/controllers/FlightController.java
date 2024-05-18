@@ -1,5 +1,7 @@
 package ru.vlsu.airline.controllers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -7,16 +9,13 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.vlsu.airline.dto.FlightBoardModel;
-import ru.vlsu.airline.dto.FlightModel;
-import ru.vlsu.airline.dto.SeatModel;
+import ru.vlsu.airline.dto.*;
 import ru.vlsu.airline.entities.Flight;
 import ru.vlsu.airline.services.IFlightService;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,29 +23,33 @@ import java.util.Optional;
 @RequestMapping("/flight")
 public class FlightController {
 
+    private static final Logger logger = LoggerFactory.getLogger(FlightController.class);
+
     @Autowired
     private IFlightService flightService;
 
-    @GetMapping
-    public ResponseEntity<Page<FlightModel>> getAllFlights(@RequestParam(defaultValue = "0") int page,
-                                                           @RequestParam(defaultValue = "10") int size) {
-        Page<Flight> flightsPage = flightService.getAllFlights(PageRequest.of(page, size));
-        Page<FlightModel> flightModels = flightsPage.map(this::toFlightModel);
+    @PostMapping("get-flights")
+    public ResponseEntity<Page<FlightModel>> getAllFlights(@RequestBody FlightFilterRequest flightFilterRequest){
+        Page<Flight> fligtPage = flightService.getFlights(flightFilterRequest.getFlightPage(), flightFilterRequest.getFlightSearchCriteria());
+        Page<FlightModel> flightModels = fligtPage.map(this::toFlightModel);
         return ResponseEntity.ok(flightModels);
     }
 
     public FlightModel toFlightModel(Flight flight) {
         FlightModel flightModel = new FlightModel();
         flightModel.setId(flight.getId());
-        flightModel.setScheduleId(flight.getSchedule().getId());
+        flightModel.setScheduleNumber(flight.getSchedule().getNumber());
+        flightModel.setArrivalAirport(flight.getSchedule().getArrivalAirport().getName());
+        flightModel.setDepartureAirport(flight.getSchedule().getDepartureAirport().getName());
         String formattedDate = flight.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         flightModel.setDate(formattedDate);
-        flightModel.setPlaneId(flight.getPlane().getId());
+        flightModel.setPlaneName(flight.getPlane().getPlaneName());
         flightModel.setType(flight.getType());
         flightModel.setStatus(flight.getStatus());
         flightModel.setGate(flight.getGate());
         return flightModel;
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<FlightModel> getFlightById(@PathVariable int id) {

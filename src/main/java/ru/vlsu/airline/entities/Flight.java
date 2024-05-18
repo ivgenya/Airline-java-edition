@@ -33,6 +33,7 @@ public class Flight {
 
     @ManyToOne
     @JoinColumn(name = "schedule_id")
+    @JsonIgnore
     private Schedule schedule;
 
     @OneToMany(mappedBy = "flight")

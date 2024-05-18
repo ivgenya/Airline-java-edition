@@ -10,4 +10,5 @@ import java.util.Optional;
 @Repository
 public interface ScheduleRepository extends JpaRepository<Schedule, Integer> {
     Optional<Schedule> findByAirlineIdAndNumber(int airlineId, int number);
+    Optional<Schedule> findByNumber(int number);
 }
