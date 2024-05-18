@@ -11,7 +11,6 @@ import java.util.Optional;
 
 
 public interface IFlightService {
-    Page<Flight> getAllFlights(Pageable pageable);
     Flight getFlightById(int flightId);
     int addFlight(Flight flight);
     int updateFlight(Flight flight);

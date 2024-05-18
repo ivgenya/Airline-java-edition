@@ -38,15 +38,7 @@ public class FlightService implements IFlightService{
     private PlaneRepository planeRepository;
     @Autowired
     private FlightSeatRepository seatRepository;
-    @Override
-    public Page<Flight> getAllFlights(Pageable pageable) {
-//        Flight flights = flightRepository.findAll(pageable)
-        return flightRepository.findAll(pageable);
-    }
 
-//    private FlightModel convertFlightToDTO(Flight flight){
-//
-//    }
 
     @Override
     public Page<Flight> getFlights(FlightPage flightPage,
@@ -139,14 +131,14 @@ public class FlightService implements IFlightService{
     public Flight convertToEntity(FlightModel flightModel) {
         Flight flight = new Flight();
         flight.setId(flightModel.getId());
-        Optional<Schedule> optionalSchedule = scheduleRepository.findById(flightModel.getScheduleId());
-        if (optionalSchedule.isPresent()) {
+        Optional<Schedule> optionalSchedule = scheduleRepository.findByNumber(flightModel.getScheduleNumber());
+        if(optionalSchedule.isPresent()){
             flight.setSchedule(optionalSchedule.get());
         }
         LocalDate date = LocalDate.parse(flightModel.getDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         flight.setDate(date);
-        Optional<Plane> optionalPlane = planeRepository.findById(flightModel.getPlaneId());
-        if (optionalPlane.isPresent()) {
+        Optional<Plane> optionalPlane = planeRepository.findByPlaneName(flightModel.getPlaneName());
+        if(optionalPlane.isPresent()){
             flight.setPlane(optionalPlane.get());
         }
         flight.setType(flightModel.getType());
