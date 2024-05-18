@@ -3,6 +3,7 @@ package ru.vlsu.airline.repositories;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface FlightRepository extends JpaRepository<Flight, Integer> {
+public interface FlightRepository extends JpaRepository<Flight, Integer>, JpaSpecificationExecutor<Flight> {
 
     @Query("SELECT f, MIN(seat.price) FROM Flight f " +
             "JOIN f.schedule s " +
@@ -24,7 +25,8 @@ public interface FlightRepository extends JpaRepository<Flight, Integer> {
             "AND aa.city = :arrivalCity " +
             "AND seat.status = 'available' " +
             "AND f.date = :date " +
-            "GROUP BY f.id")
+            "GROUP BY f.id " +
+            "ORDER BY s.departureTime ASC")
     Page<Object[]> findByDepartureCityAndArrivalCityAndDate(
             @Param("departureCity") String departureCity,
             @Param("arrivalCity") String arrivalCity,

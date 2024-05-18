@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +17,6 @@ import ru.vlsu.airline.services.IFlightService;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,31 +30,22 @@ public class FlightController {
     private IFlightService flightService;
 
     @PostMapping("get-flights")
-    public ResponseEntity<Page<FlightModel>> getAllFlights(@RequestBody FlightFilterRequest flightFilterRequest){
-        Page<Flight> fligtPage = flightService.getFlights(flightFilterRequest.getFlightPage(), flightFilterRequest.getFlightSearchCriteria());
-        Page<FlightModel> flightModels = fligtPage.map(this::toFlightModel);
-        return ResponseEntity.ok(flightModels);
+    public ResponseEntity<Page<FlightModel>> getAllFlights(@RequestBody(required = false) FlightSearchCriteria flightSearchCriteria,
+                                                           @RequestParam(defaultValue = "0") int page,
+                                                           @RequestParam(defaultValue = "10") int size,
+                                                           @RequestParam(defaultValue = "id") String sortBy,
+                                                           @RequestParam(defaultValue = "asc") String sortOrder){
+        Sort.Direction direction = Sort.Direction.fromString(sortOrder);
+        Sort sorting = Sort.by(direction, sortBy);
+        Pageable pageable = PageRequest.of(page, size, sorting);
+        Page<Flight> flightPage = flightService.getFlights(flightSearchCriteria, pageable);
+        Page<FlightModel> flightModelPage = flightPage.map(FlightModel::toFlightModel);
+        return ResponseEntity.ok(flightModelPage);
     }
-
-    public FlightModel toFlightModel(Flight flight) {
-        FlightModel flightModel = new FlightModel();
-        flightModel.setId(flight.getId());
-        flightModel.setScheduleNumber(flight.getSchedule().getNumber());
-        flightModel.setArrivalAirport(flight.getSchedule().getArrivalAirport().getName());
-        flightModel.setDepartureAirport(flight.getSchedule().getDepartureAirport().getName());
-        String formattedDate = flight.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        flightModel.setDate(formattedDate);
-        flightModel.setPlaneName(flight.getPlane().getPlaneName());
-        flightModel.setType(flight.getType());
-        flightModel.setStatus(flight.getStatus());
-        flightModel.setGate(flight.getGate());
-        return flightModel;
-    }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<FlightModel> getFlightById(@PathVariable int id) {
-        FlightModel flight = toFlightModel(flightService.getFlightById(id));
+        FlightModel flight = FlightModel.toFlightModel(flightService.getFlightById(id));
         return ResponseEntity.ok(flight);
     }
 

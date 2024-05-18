@@ -90,7 +90,6 @@ public class TicketService implements ITicketService {
         Optional<Flight> flight = flightRepository.findById(flightId);
         if (flight.isPresent()) {
             Flight existFlight = flight.get();
-            logger.info(existFlight.getStatus());
             Optional<Flight_seat> seat = seatRepository.findById(seatId);
             if (seat.isPresent() && seat.get().getStatus().equals("available")) {
                 Optional<User> optionalUser = userRepository.findById(user.getId());
@@ -109,7 +108,6 @@ public class TicketService implements ITicketService {
                     ticket.setUser(managedUser);
                     ticket.setBooking(null);
                     existSeat.setStatus("reserved");
-                    seatRepository.save(existSeat);
                     Ticket savedTicket = ticketRepository.save(ticket);
                     return convertToTicketModel(savedTicket);
                 }

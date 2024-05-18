@@ -41,9 +41,8 @@ public class FlightService implements IFlightService{
 
 
     @Override
-    public Page<Flight> getFlights(FlightPage flightPage,
-                                   FlightSearchCriteria flightSearchCriteria){
-        return flightCriteriaRepository.findAllFlightsWithFilters(flightPage, flightSearchCriteria);
+    public Page<Flight> getFlights(FlightSearchCriteria flightSearchCriteria, Pageable pageable){
+        return flightCriteriaRepository.findAllFlightsWithFilters(flightSearchCriteria, pageable);
     }
 
     @Override
@@ -171,7 +170,7 @@ public class FlightService implements IFlightService{
         String flightNumber = name.substring(2);
         Optional<Airline> airline = airlineRepository.findByShortName(airlineCode);
         if(airline.isPresent()){
-            Optional<Schedule> scheduleOptional = scheduleRepository.findByAirlineIdAndNumber(airline.get().getId(), Integer.parseInt(flightNumber));
+            Optional<Schedule> scheduleOptional = scheduleRepository.findByAirlineIdAndNumber(airline.get().getId(), flightNumber);
             if(scheduleOptional.isPresent()){
                 return flightRepository.findByScheduleIdAndDate(scheduleOptional.get().getId(), date);
             }

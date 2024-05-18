@@ -20,5 +20,5 @@ public interface IFlightService {
     List<SeatModel> getSeatsByFlightId(int flightId);
     Optional<Flight> findFlightByAirlineShortNameNumberAndDate(String name, LocalDate date);
     FlightBoardModel convertToDto(Flight flight);
-    Page<Flight> getFlights(FlightPage flightPage, FlightSearchCriteria flightSearchCriteria);
+    Page<Flight> getFlights(FlightSearchCriteria flightSearchCriteria, Pageable pageable);
 }
