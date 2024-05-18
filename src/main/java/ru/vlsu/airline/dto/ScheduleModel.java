@@ -8,7 +8,7 @@ public class ScheduleModel {
     @NotNull
     private int airlineId;
     @NotNull
-    private int number;
+    private String number;
     @NotNull
     private int departureAirportId;
     @NotNull
@@ -33,11 +33,11 @@ public class ScheduleModel {
         this.airlineId = airlineId;
     }
 
-    public int getNumber() {
+    public String getNumber() {
         return number;
     }
 
-    public void setNumber(int number) {
+    public void setNumber(String number) {
         this.number = number;
     }
 

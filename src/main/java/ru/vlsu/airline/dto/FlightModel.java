@@ -1,18 +1,22 @@
 package ru.vlsu.airline.dto;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import ru.vlsu.airline.entities.Flight;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class FlightModel {
     private int id;
     @NotNull
-    private int scheduleNumber;
+    private int scheduleId;
+    @NotNull
+    private String scheduleNumber;
     @NotNull
     private String date;
-//    @NotNull
-//    private int planeId;
+    @NotNull
+    private int planeId;
     @NotNull
     private String planeName;
     @NotNull
@@ -50,11 +54,11 @@ public class FlightModel {
         this.departureAirport = departureAirport;
     }
 
-    public int getScheduleNumber() {
+    public String getScheduleNumber() {
         return scheduleNumber;
     }
 
-    public void setScheduleNumber(int scheduleNumber) {
+    public void setScheduleNumber(String scheduleNumber) {
         this.scheduleNumber = scheduleNumber;
     }
 
@@ -65,14 +69,14 @@ public class FlightModel {
     public void setDate(String date) {
         this.date = date;
     }
-//
-//    public int getPlaneId() {
-//        return planeId;
-//    }
-//
-//    public void setPlaneId(int planeId) {
-//        this.planeId = planeId;
-//    }
+
+    public int getPlaneId() {
+        return planeId;
+    }
+
+    public void setPlaneId(int planeId) {
+        this.planeId = planeId;
+    }
 
     public String getType() {
         return type;
@@ -104,5 +108,30 @@ public class FlightModel {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public static FlightModel toFlightModel(Flight flight) {
+        FlightModel flightModel = new FlightModel();
+        flightModel.setId(flight.getId());
+        flightModel.setScheduleNumber(flight.getSchedule().getNumber());
+        flightModel.setArrivalAirport(flight.getSchedule().getArrivalAirport().getName());
+        flightModel.setDepartureAirport(flight.getSchedule().getDepartureAirport().getName());
+        flightModel.setScheduleId(flight.getSchedule().getId());
+        String formattedDate = flight.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        flightModel.setDate(formattedDate);
+        flightModel.setPlaneId(flight.getPlane().getId());
+        flightModel.setPlaneName(flight.getPlane().getPlaneName());
+        flightModel.setType(flight.getType());
+        flightModel.setStatus(flight.getStatus());
+        flightModel.setGate(flight.getGate());
+        return flightModel;
+    }
+
+    public int getScheduleId() {
+        return scheduleId;
+    }
+
+    public void setScheduleId(int scheduleId) {
+        this.scheduleId = scheduleId;
     }
 }

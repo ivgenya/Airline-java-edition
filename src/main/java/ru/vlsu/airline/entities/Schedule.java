@@ -17,7 +17,7 @@ public class Schedule{
     private int id;
 
     @Column(name = "number", nullable = false)
-    private int number;
+    private String number;
 
     @Column(name = "departure_time", nullable = false)
     private LocalTime departureTime;
@@ -68,11 +68,11 @@ public class Schedule{
         this.airline = airline;
     }
 
-    public int getNumber() {
+    public String getNumber() {
         return number;
     }
 
-    public void setNumber(int number) {
+    public void setNumber(String number) {
         this.number = number;
     }
 

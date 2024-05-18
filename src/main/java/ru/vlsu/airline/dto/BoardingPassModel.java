@@ -25,7 +25,7 @@ public class BoardingPassModel {
     private LocalDateTime dateOfPurchase;
     private int gate;
     private String shortName;
-    private int number;
+    private String number;
     private String depShortName;
     private String depCity;
     private String arrShortName;
@@ -197,11 +197,11 @@ public class BoardingPassModel {
         this.shortName = shortName;
     }
 
-    public int getNumber() {
+    public String getNumber() {
         return number;
     }
 
-    public void setNumber(int number) {
+    public void setNumber(String number) {
         this.number = number;
     }
 
