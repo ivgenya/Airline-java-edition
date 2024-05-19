@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import ru.vlsu.airline.dto.*;
 import ru.vlsu.airline.entities.Booking;
@@ -26,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -36,12 +39,18 @@ public class TicketController {
     @Autowired
     private ITicketService ticketService;
 
-    @PostMapping(value = "/buy",  produces = "application/json")
+    @PostMapping(value = "/buy", produces = "application/json")
     @Transactional
     public ResponseEntity<?> buyTicket(@Valid @RequestBody PassengerModel passengerModel,
-                                            @RequestParam int flightId,
-                                            @RequestParam int seatId) {
-
+                                       BindingResult bindingResult,
+                                       @RequestParam int flightId,
+                                       @RequestParam int seatId) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(FieldError::getDefaultMessage)
+                    .collect(Collectors.toList());
+            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        }
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
             return null;
@@ -49,17 +58,17 @@ public class TicketController {
         Object principal = auth.getPrincipal();
         User user = (principal instanceof User) ? (User) principal : null;
         TicketModel ticket = ticketService.buyTicket(passengerModel, flightId, seatId, user);
-        if(ticket == null){
+        if (ticket == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Произошла ошибка при покупке");
         }
         return ResponseEntity.ok(ticket);
     }
 
-    @GetMapping(value = "/get-pdf/{code}",  produces = "application/json")
+    @GetMapping(value = "/get-pdf/{code}", produces = "application/json")
     @Transactional
     public ResponseEntity<?> getPdfByCode(@PathVariable String code) {
         Ticket ticket = ticketService.getTicketByCode(code);
-        if(ticket == null) {
+        if (ticket == null) {
             return new ResponseEntity<>("Не найдено", HttpStatus.NOT_FOUND);
         }
         BoardingPassModel ticketExist = ticketService.getBoardingPass(ticket.getId());
@@ -131,7 +140,7 @@ public class TicketController {
     @Transactional
     public ResponseEntity<?> getZip(@PathVariable int bookingId) {
         Booking booking = ticketService.findByIdWithTickets(bookingId);
-        if(booking == null){
+        if (booking == null) {
             return new ResponseEntity<>("Не найдено", HttpStatus.NOT_FOUND);
         }
         List<Ticket> tickets = booking.getTickets();
@@ -172,7 +181,7 @@ public class TicketController {
     @Transactional
     public ResponseEntity<?> registerForFlight(@RequestParam String ticketCode) {
         Ticket ticket = ticketService.getTicketByCode(ticketCode);
-        if(ticket == null){
+        if (ticket == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Билет с таким кодом не найден");
         }
         BoardingPassModel boardingPass = ticketService.getBoardingPass(ticket.getId());
@@ -207,7 +216,7 @@ public class TicketController {
     @Transactional
     public ResponseEntity<String> cancelBooking(@PathVariable int bookingId) {
         boolean bookingCancelled = ticketService.cancelBooking(bookingId);
-        if(bookingCancelled){
+        if (bookingCancelled) {
             return ResponseEntity.ok("Бронирование отменено");
         }
         return ResponseEntity.ok("Произошла ошибка при отмене бронирования");
@@ -225,6 +234,7 @@ public class TicketController {
         List<BoardingPassModel> tickets = ticketService.getTicketByUserId(user);
         return ResponseEntity.ok(tickets);
     }
+
     @GetMapping(value = "all-bookings", produces = "application/json")
     @Transactional
     public ResponseEntity<List<BookingModel>> getUserBookings() {
@@ -237,6 +247,7 @@ public class TicketController {
         List<BookingModel> bookings = ticketService.getBookingByUserId(user);
         return ResponseEntity.ok(bookings);
     }
+
     @GetMapping(value = "seats/{flightId}", produces = "application/json")
     @Transactional
     public ResponseEntity<List<Flight_seat>> getSeatsByFlightId(@PathVariable int flightId) {

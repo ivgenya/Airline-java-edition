@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import ru.vlsu.airline.dto.ScheduleModel;
 import ru.vlsu.airline.entities.Schedule;
@@ -15,6 +17,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/schedule")
@@ -58,7 +61,13 @@ public class ScheduleController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createSchedule(@Valid @RequestBody ScheduleModel scheduleModel) {
+    public ResponseEntity<?> createSchedule(@Valid @RequestBody ScheduleModel scheduleModel, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(FieldError::getDefaultMessage)
+                    .collect(Collectors.toList());
+            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        }
         Schedule schedule = scheduleService.convertToEntity(scheduleModel);
         int result = scheduleService.addSchedule(schedule);
 
@@ -70,7 +79,13 @@ public class ScheduleController {
     }
 
     @PutMapping(value = "/{id}", produces = "application/json")
-    public ResponseEntity<?> updateSchedule(@PathVariable int id, @RequestBody ScheduleModel scheduleModel) {
+    public ResponseEntity<?> updateSchedule(@PathVariable int id, @Valid @RequestBody ScheduleModel scheduleModel, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(FieldError::getDefaultMessage)
+                    .collect(Collectors.toList());
+            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        }
         Schedule schedule = scheduleService.convertToEntity(scheduleModel);
         int updatedScheduleId = scheduleService.updateSchedule(schedule);
         if (updatedScheduleId != -1) {

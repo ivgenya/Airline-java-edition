@@ -17,6 +17,7 @@ public interface IFlightService {
     int deleteFlight(int flightId);
     Page<FlightBoardModel> getFlightsByCities(String departureCity, String arrivalCity, LocalDate date, Pageable pageable);
     Flight convertToEntity(FlightModel flightModel);
+    Flight convertToEntity(CreateFlightModel flightModel);
     List<SeatModel> getSeatsByFlightId(int flightId);
     Optional<Flight> findFlightByAirlineShortNameNumberAndDate(String name, LocalDate date);
     FlightBoardModel convertToDto(Flight flight);

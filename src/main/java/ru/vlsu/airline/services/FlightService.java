@@ -147,6 +147,25 @@ public class FlightService implements IFlightService{
     }
 
     @Override
+    public Flight convertToEntity(CreateFlightModel flightModel) {
+        Flight flight = new Flight();
+        Optional<Schedule> optionalSchedule = scheduleRepository.findById(flightModel.getScheduleId());
+        if(optionalSchedule.isPresent()){
+            flight.setSchedule(optionalSchedule.get());
+        }
+        LocalDate date = LocalDate.parse(flightModel.getDate(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        flight.setDate(date);
+        Optional<Plane> optionalPlane = planeRepository.findById(flightModel.getPlaneId());
+        if(optionalPlane.isPresent()){
+            flight.setPlane(optionalPlane.get());
+        }
+        flight.setType(flightModel.getType());
+        flight.setStatus(flightModel.getStatus());
+        flight.setGate(flightModel.getGate());
+        return flight;
+    }
+
+    @Override
     public List<SeatModel> getSeatsByFlightId(int flightId){
         List<Flight_seat> seats = seatRepository.findByFlightId(flightId);
         List<SeatModel> seatModels = new ArrayList<SeatModel>();

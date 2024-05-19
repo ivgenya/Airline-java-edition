@@ -10,15 +10,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.vlsu.airline.dto.*;
 import ru.vlsu.airline.entities.Flight;
 import ru.vlsu.airline.services.IFlightService;
+import org.springframework.validation.FieldError;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/flight")
@@ -50,7 +53,13 @@ public class FlightController {
     }
 
     @PostMapping
-    public ResponseEntity<String> createFlight(@Valid @RequestBody FlightModel flightModel) {
+    public ResponseEntity<?> createFlight(@Valid @RequestBody CreateFlightModel flightModel, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(FieldError::getDefaultMessage)
+                    .collect(Collectors.toList());
+            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        }
         Flight flight = flightService.convertToEntity(flightModel);
         int result = flightService.addFlight(flight);
 
@@ -62,7 +71,13 @@ public class FlightController {
     }
 
     @PutMapping(value = "/{id}", produces = "application/json")
-    public ResponseEntity<?> updateFlight(@PathVariable int id, @RequestBody FlightModel flight) {
+    public ResponseEntity<?> updateFlight(@PathVariable int id, @Valid @RequestBody FlightModel flight, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(FieldError::getDefaultMessage)
+                    .collect(Collectors.toList());
+            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        }
         int updatedFlightId = flightService.updateFlight(flightService.convertToEntity(flight));
         if (updatedFlightId != -1) {
             return ResponseEntity.ok(updatedFlightId);
